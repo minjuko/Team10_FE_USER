@@ -6,6 +6,10 @@ import { VitePWA } from "vite-plugin-pwa";
 dotenv.config();
 
 export default defineConfig({
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.js",
+  },
   plugins: [
     VitePWA({
       includeAssets: ["/favicon.ico", "/apple-touch-icon.png"],

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import TimeImage from "/StoreInfo/Time.svg";
 import Image from "../atoms/Image";
 import CustomModal from "../atoms/CustomModal";
@@ -11,6 +11,11 @@ import { useSuspenseQueries } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { saveReservation } from "../../store/action";
 import { carwashesInfo, carwashesBays } from "../../apis/carwashes";
+import {
+  buildReservationPayload,
+  normalizeOpeningHours,
+  parseLocalDateTime,
+} from "../../utils/reservationTime";
 
 const ScheduleTemplate = ({ carwashId, bayId }) => {
   const [date, setDate] = useState(new Date());
@@ -43,24 +48,20 @@ const ScheduleTemplate = ({ carwashId, bayId }) => {
       return;
     }
 
-    dispatch(saveReservation(formattedStartTime, formattedEndTime));
+    dispatch(
+      saveReservation(reservationPayload.startTime, reservationPayload.endTime),
+    );
     navigate("/payment");
   };
 
   const name = washinfo?.data?.data?.response?.name;
-  const openingHours = washinfo?.data?.data?.response?.optime;
-
-  const updateOpeningHours = (openingHours) => {
-    for (let day in openingHours) {
-      if (openingHours[day].end === "00:00") {
-        openingHours[day].end = "24:00";
-      }
-    }
-  };
-  updateOpeningHours(openingHours);
+  const openingHours = useMemo(
+    () => normalizeOpeningHours(washinfo?.data?.data?.response?.optime),
+    [washinfo?.data?.data?.response?.optime],
+  );
 
   const bayInfo = bayinfo?.data?.data?.response.bayList.find(
-    (bay) => bay.bayId === parseInt(bayId)
+    (bay) => bay.bayId === parseInt(bayId),
   );
 
   const handleDateChange = (date) => {
@@ -78,51 +79,20 @@ const ScheduleTemplate = ({ carwashId, bayId }) => {
     setDuration(duration);
   };
 
-  const computeEndTime = () => {
-    if (!startTime || !duration) return;
+  useEffect(() => {
+    setStartTime(null);
+    setDuration(null);
+  }, [carwashId, bayId]);
 
-    const [hours, minutes] = startTime.split(":").map(Number);
-    const endTimeInMinutes = hours * 60 + minutes + duration;
-
-    let endHour = Math.floor(endTimeInMinutes / 60);
-    const endMinute = endTimeInMinutes % 60;
-
-    let endDate = new Date(date);
-    if (endHour >= 24) {
-      endHour -= 24;
-      endDate.setDate(endDate.getDate() + 1);
-    }
-
-    return {
-      time: `${String(endHour).padStart(2, "0")}:${String(endMinute).padStart(
-        2,
-        "0"
-      )}`,
-      date: endDate,
-    };
-  };
-
-  const computedEnd = computeEndTime();
-
-  const combineDateTime = (date, time) => {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-
-    const formattedDate = [
-      year,
-      month.toString().padStart(2, "0"),
-      day.toString().padStart(2, "0"),
-    ].join("-");
-
-    return `${formattedDate}T${time}`;
-  };
-
-  const formattedStartTime = startTime
-    ? combineDateTime(date, startTime)
-    : null;
-  const formattedEndTime = computedEnd
-    ? combineDateTime(computedEnd.date, computedEnd.time)
+  const reservationPayload =
+    startTime && duration
+      ? buildReservationPayload(bayInfo.bayId, date, startTime, duration)
+      : null;
+  const computedEnd = reservationPayload
+    ? {
+        date: parseLocalDateTime(reservationPayload.endTime),
+        time: reservationPayload.endTime.slice(11),
+      }
     : null;
 
   const modalContent = (

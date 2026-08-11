@@ -1,4 +1,10 @@
 import React, { useState, useEffect } from "react";
+import {
+  generateTimeSlots,
+  getOpeningPeriodForDate,
+  isPastSlot,
+  isReservationOverlapping,
+} from "../../utils/reservationTime";
 
 const TimePicker = ({
   openingHours,
@@ -13,51 +19,8 @@ const TimePicker = ({
     setSelectedTime(null);
   }, [selectedDate]);
 
-  const generateTime = (start, end) => {
-    const times = [];
-    let [startHour, startMin] = start.split(":").map(Number);
-    const [endHour] = end.split(":").map(Number);
-
-    while (startHour < endHour) {
-      times.push(
-        `${String(startHour).padStart(2, "0")}:${String(startMin).padStart(
-          2,
-          "0"
-        )}`
-      );
-      if (startMin === 0) startMin = 30;
-      else {
-        startMin = 0;
-        startHour++;
-      }
-    }
-    return times;
-  };
-
   const isScheduled = (time) => {
-    return bayBookedTimeList.some((schedule) => {
-      const scheduleDate = new Date(schedule.startTime).toLocaleDateString();
-      const selectedDateStr = selectedDate.toLocaleDateString();
-      if (scheduleDate !== selectedDateStr) {
-        return false;
-      }
-
-      let [scheduleStartHour, scheduleStartMin] = schedule.startTime
-        .split("T")[1]
-        .split(":")
-        .map(Number);
-      let [scheduleEndHour, scheduleEndMin] = schedule.endTime
-        .split("T")[1]
-        .split(":")
-        .map(Number);
-      let [checkHour, checkMin] = time.split(":").map(Number);
-
-      const scheduleStartTime = scheduleStartHour * 60 + scheduleStartMin;
-      const scheduleEndTime = scheduleEndHour * 60 + scheduleEndMin;
-      const checkTime = checkHour * 60 + checkMin;
-
-      return checkTime >= scheduleStartTime && checkTime < scheduleEndTime;
-    });
+    return isReservationOverlapping(selectedDate, time, 30, bayBookedTimeList);
   };
 
   const handleTimeClick = (time) => {
@@ -65,32 +28,14 @@ const TimePicker = ({
     handleButtonClick(time);
   };
 
-  const isPastTime = (time) => {
-    const currentDate = new Date();
-    const currentHour = currentDate.getHours();
-    const currentMin = currentDate.getMinutes();
-    let [checkHour, checkMin] = time.split(":").map(Number);
-
-    if (currentHour > checkHour) {
-      return true;
-    } else if (currentHour === checkHour && currentMin >= checkMin) {
-      return true;
-    }
-    return false;
-  };
-
-  const isWeekend = (date) => {
-    const day = date.getDay();
-    return day === 0 || day === 6;
-  };
-
-  const currentOpeningHours = isWeekend(selectedDate)
-    ? openingHours.weekend
-    : openingHours.weekday;
-
-  const currentHours = isMorningSelected
-    ? generateTime(currentOpeningHours.start, "12:00")
-    : generateTime("12:00", currentOpeningHours.end);
+  const currentOpeningHours = getOpeningPeriodForDate(
+    openingHours,
+    selectedDate,
+  );
+  const allHours = generateTimeSlots(currentOpeningHours);
+  const currentHours = allHours.filter((time) =>
+    isMorningSelected ? time < "12:00" : time >= "12:00",
+  );
 
   return (
     <div className="grid gap-2">
@@ -99,14 +44,16 @@ const TimePicker = ({
           onClick={() => setIsMorningSelected(true)}
           className={`p-1 rounded-l-xl border w-1/2 ${
             isMorningSelected ? "bg-primary text-white" : "bg-white"
-          } `}>
+          } `}
+        >
           오전
         </button>
         <button
           onClick={() => setIsMorningSelected(false)}
           className={`p-1 rounded-r-xl border w-1/2 ${
             !isMorningSelected ? "bg-primary text-white" : "bg-white"
-          } `}>
+          } `}
+        >
           오후
         </button>
       </div>
@@ -116,19 +63,15 @@ const TimePicker = ({
             <button
               key={time}
               onClick={() => handleTimeClick(time)}
-              disabled={
-                isScheduled(time) ||
-                (selectedDate.toDateString() === new Date().toDateString() &&
-                  isPastTime(time))
-              }
+              disabled={isScheduled(time) || isPastSlot(selectedDate, time)}
+              aria-pressed={selectedTime === time}
               className={`p-4 border rounded-xl ${
                 selectedTime === time ? "bg-primary text-white" : "bg-white"
               } ${
-                (isScheduled(time) ||
-                  (selectedDate.toDateString() === new Date().toDateString() &&
-                    isPastTime(time))) &&
+                (isScheduled(time) || isPastSlot(selectedDate, time)) &&
                 "opacity-50 cursor-not-allowed"
-              }`}>
+              }`}
+            >
               {time}
             </button>
           ))}

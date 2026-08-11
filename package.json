@@ -7,6 +7,8 @@
     "dev": "vite",
     "host": "vite --host",
     "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
@@ -45,6 +47,8 @@
     "@storybook/react": "^7.4.5",
     "@storybook/react-vite": "^7.4.5",
     "@storybook/testing-library": "^0.2.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react-swc": "^3.3.2",
@@ -56,6 +60,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "eslint-plugin-storybook": "^0.6.14",
+    "jsdom": "^22.1.0",
     "msw": "^1.3.2",
     "postcss": "^8.4.30",
     "prettier": "^3.0.3",
@@ -64,7 +69,8 @@
     "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss": "^3.3.3",
     "vite": "^4.4.5",
-    "vite-plugin-pwa": "^0.16.7"
+    "vite-plugin-pwa": "^0.16.7",
+    "vitest": "^0.34.6"
   },
   "msw": {
     "workerDirectory": "public"
