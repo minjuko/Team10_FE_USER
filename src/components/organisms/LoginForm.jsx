@@ -7,6 +7,8 @@ import { useDispatch } from "react-redux";
 import { loginThunk } from "../../store/authSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import Close from "/close.svg";
+import { isDemoMode } from "../../demo/mode";
+import { DEMO_CREDENTIALS } from "../../mocks/demoData";
 
 const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState("");
@@ -41,6 +43,7 @@ const LoginForm = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { isSubmitting, errors },
   } = useForm({
@@ -116,17 +119,45 @@ const LoginForm = () => {
           >
             로그인
           </Button>
+          {isDemoMode && (
+            <div className="grid gap-2 p-3 text-sm border border-yellow-300 rounded-lg bg-yellow-50">
+              <div>
+                <strong>Portfolio Demo</strong>
+                <br />
+                실제 계정이나 결제 정보가 필요하지 않습니다.
+              </div>
+              <Button
+                variant="long"
+                className="rounded-lg"
+                onClick={() => {
+                  setValue("email", DEMO_CREDENTIALS.email, {
+                    shouldValidate: true,
+                  });
+                  setValue("password", DEMO_CREDENTIALS.password, {
+                    shouldValidate: true,
+                  });
+                }}
+              >
+                데모 계정 입력
+              </Button>
+              <small>
+                {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+              </small>
+            </div>
+          )}
           {errorMessage && (
             <small className="text-red-500" role="alert">
               {errorMessage}
             </small>
           )}
-          <Link
-            to="/signup"
-            className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75"
-          >
-            회원가입
-          </Link>
+          {!isDemoMode && (
+            <Link
+              to="/signup"
+              className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75"
+            >
+              회원가입
+            </Link>
+          )}
         </form>
       </div>
     </div>

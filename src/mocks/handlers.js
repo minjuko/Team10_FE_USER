@@ -1,1108 +1,273 @@
 import { rest } from "msw";
+import {
+  createDemoState,
+  DEMO_CREDENTIALS,
+  demoBookedTimes,
+  demoCarwashes,
+} from "./demoData";
 
-// 모든 response가 형식에 맞는지 확인 (success, response, error)
-export const handlers = [
-  // 사용자 회원가입
-  // 회원가입 성공 시 200 응답
-  // 회원가입 실패 시 401 응답 (형식에 맞지 않는 경우)
-  rest.post("/api/join/user", (req, res, ctx) => {
-    const { username, email, password, tel } = req.body;
+const ok = (response) => ({ success: true, response, error: null });
+const fail = (code, message) => ({
+  success: false,
+  response: null,
+  error: { code, message },
+});
 
-    const regex = {
-      email: /^\w[\w._%+-]+@\w[\w.-]+\.[a-zA-Z]{2,6}$/,
-      password:
-        /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@#$%^&+=!~`<>,./?;:'"\[\]{}\\()|_-])\S*$/,
-    };
+let state = createDemoState();
 
-    function validate(field, isValid, message) {
-      if (!isValid) {
-        return res(
-          ctx.status(401),
-          ctx.json({
-            success: false,
-            response: null,
-            error: { message: message, status: 401 },
-          })
-        );
-      }
-    }
+export const resetDemoState = () => {
+  state = createDemoState();
+};
 
-    const validators = [
-      {
-        field: "username",
-        isValid: username && username.length >= 8 && username.length <= 45,
-        message: "사용자 이름은 8-45자 사이여야 합니다.",
-      },
-      {
-        field: "email",
-        isValid: email && regex.email.test(email),
-        message: "이메일 형식으로 작성해주세요.",
-      },
-      {
-        field: "password",
-        isValid:
-          password &&
-          regex.password.test(password) &&
-          password.length >= 8 &&
-          password.length <= 45,
-        message: "비밀번호 형식이 올바르지 않습니다.",
-      },
-      {
-        field: "tel",
-        isValid: tel && tel.length >= 9 && tel.length <= 14,
-        message: "전화번호 형식이 올바르지 않습니다.",
-      },
-    ];
-
-    for (const { field, isValid, message } of validators) {
-      const response = validate(field, isValid, message);
-      if (response) return response;
-    }
-
-    return res(ctx.json({ success: true, response: null, error: null }));
-  }),
-
-  // 사용자 로그인
-  // 로그인 성공 시 헤더에 토큰 담아서 보내줌
-  rest.post("/api/user/login", (req, res, ctx) => {
-    const { email, password } = req.body;
-
-    if (email !== "user@nate.com" || password !== "user1234!") {
-      return res(
-        ctx.status(401),
-        ctx.json({
-          success: false,
-          response: null,
-          error: "인증에 실패했습니다.",
-        })
-      );
-    }
-
-    const token =
-      "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzc2FyQG5hdGUuY29tIiwicm9sZSI6IlJPTEVfVVNFUiIsImlkIjoxLCJleHAiOjE2ODcwNTM5MzV9.fXlD0NZQXYYfPHV8rokRJTM86nhS869LZ1KIGi7_qvPOcVbXgvyZLKvnlLxomIiS3YFnQRLzXAJ2G41yI_AmGg";
-    localStorage.setItem("token", token);
-
+const requireDemoAuth = (req, res, ctx) => {
+  if (req.headers.get("Authorization") !== "Bearer portfolio-demo-token") {
     return res(
-      ctx.set("Authorization", token),
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: null,
-        error: null,
-      })
+      ctx.status(401),
+      ctx.json(fail("DEMO_AUTH", "데모 로그인이 필요합니다.")),
     );
-  }),
+  }
+  return null;
+};
 
-  // 유저 주변 추천 세차장 조회
-  // 세차장 사진, 별점, 세차장 이름, 주소, 현위치로부터의 거리를 불러온다.
-  rest.get("/api/carwashes/recommended", (req, res, ctx) => {
-    const { u_latitude, u_longitude } = req.params;
-    // const distance = calculateDistance(u_latitude, u_longitude);
+const getCarwash = (id) => demoCarwashes.find((item) => item.id === Number(id));
 
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: [
-          {
-            id: 3,
-            name: "세차 월드",
-            location: {
-              id: 3,
-              place: "세차 월드",
-              address: "광주 남구 봉선2로 96-14",
-              latitude: 35.125349394619,
-              longitude: 126.916778560933,
-            },
-            distance: 2.2320286199268278,
-            rate: 4.2,
-            price: 8500,
-          },
-        ],
-        error: null,
-      })
-    );
-  }),
-
-  // 위치 기반 세차장 리스트 조회
-  // 예약하기 탭 클릭시 바로 호출되는 API
-  rest.get("/api/carwashes/nearby", (req, res, ctx) => {
-    const { u_latitude, u_longitude } = req.params;
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: [
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 3.0,
-            price: 2000,
-          },
-          {
-            id: 3,
-            name: "무슨무슨세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.93,
-            },
-            distance: 4189,
-            rate: 3.0,
-            price: 2000,
-          },
-        ],
-        error: null,
-      })
-    );
-  }),
-
-  // 키워드 기반 세차장 리스트 조회
-  rest.get("/api/carwashes/search", (req, res, ctx) => {
-    const { keywordIds, u_latitude, u_longitude } = req.params;
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: [
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 3,
-            name: "무슨무슨세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.93,
-            },
-            distance: 4189,
-            rate: 1.0,
-            price: 6000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-          {
-            id: 2,
-            name: "하이세차장",
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-            location: {
-              id: 18,
-              place: "새로운 이름",
-              address: "새로운 주소",
-              latitude: 35.1759,
-              longitude: 126.9,
-            },
-            distance: 2513,
-            rate: 4.0,
-            price: 3000,
-          },
-        ],
-        error: null,
-      })
-    );
-  }),
-
-  // 세차장 상세 정보 조회 (리뷰 제외)
-  rest.get("/api/carwashes/:carwash_id/info", (req, res, ctx) => {
-    const { carwash_id } = req.params;
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          id: 2,
-          name: "민들레 세차장",
-          rate: 4.0,
-          reviewCnt: 1,
-          bayCnt: 2,
-          optime: {
-            weekday: {
-              start: "09:30:00",
-              end: "18:30:00",
-            },
-            weekend: {
-              start: "10:30:00",
-              end: "16:30:00",
-            },
-          },
-          locationDTO: {
-            placeName: "민들레 세차장",
-            address: "광주 북구 우치로 49",
-            latitude: 0.0,
-            longitude: 0.0,
-          },
-          keywordId: [1, 5, 5],
-          description: "귀여운 세차장",
-          tel: "062-1234-5679",
-          imageFiles: [],
-        },
-        error: null,
-      })
-    );
-  }),
-
-  // 세차장 상세 정보 조회 (리뷰만))
-  rest.get("/api/carwashes/:carwash_id/reviews", (req, res, ctx) => {
-    const { carwash_id } = req.params;
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          overview: {
-            rate: 4.5, // 세차장 평균 별점
-            totalCnt: 5, // 전체 리뷰 갯수
-            reviewKeyword: [
-              // 세차장 리뷰관련 키워드 갯수(통계)
-              {
-                id: 3, // 키워드 id
-                count: 5, // 관련된 리뷰 갯수
-              },
-              {
-                id: 4,
-                count: 3,
-              },
-            ],
-          },
-          reviews: [
-            {
-              rate: 5.0,
-              username: "imnewuser",
-              created_at: "2023-10-21T18:45",
-              comment: "좋네여",
-              keywordIdList: [3, 4],
-            },
-            {
-              rate: 5.0,
-              username: "imnewuser",
-              created_at: "2023-10-21T18:46",
-              comment: "괜찮은듯",
-              keywordIdList: [3, 4],
-            },
-            {
-              rate: 5.0,
-              username: "imnewuser",
-              created_at: "2023-10-21T18:47",
-              comment: "ㅇㅈㅇㅈ",
-              keywordIdList: [3],
-            },
-            {
-              rate: 5.0,
-              username: "imnewuser",
-              created_at: "2023-10-21T18:47",
-              comment: "얼쑤",
-              keywordIdList: [3],
-            },
-            {
-              rate: 5.0,
-              username: "imnewuser",
-              created_at: "2023-10-21T18:49",
-              comment: "하하호호",
-              keywordIdList: [3, 4],
-            },
-          ],
-        },
-        error: null,
-      })
-    );
-  }),
-
-  // 리뷰 등록 - 키워드 불러오기
-  rest.get("/api/reviews", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          reviewKeyword: [
-            { id: 1, keyword: "사장님이 친절해요" },
-            { id: 2, keyword: "간단한 용품을 팔아요" },
-            { id: 3, keyword: "휴게공간이 있어요" },
-            { id: 4, keyword: "가격이 합리적이예요" },
-            { id: 5, keyword: "타이어 공기를 넣을 수 있어요" },
-            { id: 6, keyword: "매장이 깨끗해요" },
-            { id: 7, keyword: "여름엔 시원하고 겨울엔 따뜻해요" },
-          ],
-        },
-        error: null,
-      })
-    );
-  }),
-
-  // 리뷰 등록
-  rest.post("/api/reviews", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    const { carwashId, reservationId, keywordIdList, rate, comment } = req.body;
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: null,
-        error: null,
-      })
-    );
-  }),
-
-  // 세차장별 예약 내역 조회 (베이 선택 페이지)
-  rest.get("/api/carwashes/:carwash_id/bays", (req, res, ctx) => {
-    const { carwash_id } = req.params;
-    const token = req.headers.get("Authorization");
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          bayList: [
-            {
-              bayId: 2,
-              bayNo: 10,
-              bayBookedTime: [
-                {
-                  startTime: "2023-10-14T14:28:30.958297",
-                  endTime: "2023-10-14T14:58:30.958325",
-                },
-                {
-                  startTime: "2023-10-14T14:28:31.054667",
-                  endTime: "2023-10-14T15:28:31.054678",
-                },
-              ],
-            },
-            {
-              bayId: 3,
-              bayNo: 1,
-              bayBookedTime: [
-                {
-                  startTime: "2023-10-14T14:28:30.958297",
-                  endTime: "2023-10-14T14:58:30.958325",
-                },
-                {
-                  startTime: "2023-10-14T14:28:31.054667",
-                  endTime: "2023-10-14T15:28:31.054678",
-                },
-              ],
-            },
-          ],
-        },
-        error: null,
-      })
-    );
-  }),
-
-  // 세차장 예약하기
-  // bay가 중복되는 것 같음. body에도 있고 params에도 있고
-  rest.post(
-    "/api/carwashes/:carwash_id/bays/:bay_id/reservations",
-    (req, res, ctx) => {
-      const { carwash_id, bay_id } = req.params;
-      const { startTime, endTime } = req.body;
-      const token = req.headers.get("Authorization");
-
-      if (!token) {
-        return res(
-          ctx.status(401),
-          ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-        );
-      }
-
-      return res(
-        ctx.status(200),
-        ctx.json({
-          success: true,
-          response: null,
-          error: null,
-        })
-      );
-    }
+const historyResponse = () => ({
+  currentReservationList: state.reservations.filter(
+    (item) => item.status === "current",
   ),
+  upcomingReservationList: state.reservations.filter(
+    (item) => item.status === "upcoming",
+  ),
+  completeReservationList: state.reservations.filter(
+    (item) => item.status === "complete",
+  ),
+});
 
-  // 결제 후 예약내역 조회
-  // 결제가 완료된 다음에 보여주는 페이지에서 호출
-  // 결제가 확실히 success 되어야 보여줘야 함
-  rest.get("/api/reservations", (req, res, ctx) => {
-    // 나중에 api 수정 되면 이거로 바꾸기
-    // rest.get("/reservations/:reservationId", (req, res, ctx) => {
-    // const { reservationId } = req.params;
-    const token = req.headers.get("Authorization");
-
-    if (!token) {
+export const handlers = [
+  rest.post("*/api/open/login/user", async (req, res, ctx) => {
+    const credentials = await req.json();
+    if (
+      credentials.email !== DEMO_CREDENTIALS.email ||
+      credentials.password !== DEMO_CREDENTIALS.password
+    ) {
       return res(
         ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
+        ctx.json(fail("1201", "데모 계정 정보를 확인해 주세요.")),
       );
     }
-
     return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          reservation: {
-            time: {
-              start: "2023-10-13T19:08:56.812565",
-              end: "2023-10-13T19:38:56.81259",
-            },
-            price: 0,
-            bayNo: 1,
-          },
-          carwash: {
-            name: "용봉세차장",
-            location: {
-              latitude: 35.141809,
-              longitude: 126.9215,
-            },
-          },
-        },
-        error: null,
-      })
+      ctx.set("Authorization", "Bearer portfolio-demo-token"),
+      ctx.json(ok(null)),
     );
   }),
 
-  // 현재 시간 기준 예약 내역 조회
-  // 하단 예약내역 메뉴를 클릭했을 때 호출
-  rest.get("/api/reservations/current-status", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
+  rest.get("*/api/common/member/info", (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    return unauthorized || res(ctx.json(ok({ name: "데모 사용자" })));
+  }),
 
-    if (!token) {
+  rest.get("*/api/open/carwashes/recommended", (req, res, ctx) =>
+    res(ctx.json(ok([demoCarwashes[0]]))),
+  ),
+  rest.get("*/api/open/carwashes/nearby", (req, res, ctx) =>
+    res(ctx.json(ok(demoCarwashes))),
+  ),
+  rest.get("*/api/open/carwashes/search", (req, res, ctx) =>
+    res(ctx.json(ok(demoCarwashes))),
+  ),
+  rest.get("*/api/open/carwashes/:carwashId/info", (req, res, ctx) => {
+    const carwash = getCarwash(req.params.carwashId);
+    return carwash
+      ? res(ctx.json(ok(carwash)))
+      : res(
+          ctx.status(404),
+          ctx.json(fail("DEMO_NOT_FOUND", "세차장을 찾을 수 없습니다.")),
+        );
+  }),
+  rest.get("*/api/open/carwashes/:carwashId/bays", (req, res, ctx) => {
+    const carwash = getCarwash(req.params.carwashId);
+    if (!carwash)
       return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
+        ctx.status(404),
+        ctx.json(fail("DEMO_NOT_FOUND", "세차장을 찾을 수 없습니다.")),
+      );
+    const baseId = carwash.id * 10;
+    const bayList = Array.from({ length: carwash.bayCnt }, (_, index) => ({
+      bayId: baseId + index + 1,
+      bayNo: index + 1,
+      bayBookedTimeList: demoBookedTimes(carwash.id, baseId + index + 1),
+    }));
+    return res(ctx.json(ok({ bayList })));
+  }),
+  rest.get("*/api/open/carwashes/:carwashId/reviews", (req, res, ctx) => {
+    const reviews = state.reviews.filter(
+      (review) => review.carwashId === Number(req.params.carwashId),
+    );
+    const keywordCounts = new Map();
+    reviews.forEach((review) =>
+      review.keywordIdList.forEach((id) =>
+        keywordCounts.set(id, (keywordCounts.get(id) || 0) + 1),
+      ),
+    );
+    return res(
+      ctx.json(
+        ok({
+          overview: {
+            rate: reviews.length
+              ? reviews.reduce((sum, review) => sum + review.rate, 0) /
+                reviews.length
+              : 0,
+            totalCnt: reviews.length,
+            reviewKeywordList: [...keywordCounts].map(([id, count]) => ({
+              id,
+              count,
+            })),
+          },
+          reviewList: reviews,
+        }),
+      ),
+    );
+  }),
+
+  rest.get("*/api/user/reservations/recent", (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    return res(
+      ctx.json(
+        ok({
+          recentReservationList: state.reservations
+            .filter((item) => item.status === "complete")
+            .slice(0, 5)
+            .map((item) => ({
+              carwashId: item.carwashId,
+              carwashName: item.carwashName,
+              image: item.image?.url,
+              date: item.time.start.slice(0, 10),
+            })),
+        }),
+      ),
+    );
+  }),
+  rest.get("*/api/user/reservations/current-status", (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    return unauthorized || res(ctx.json(ok(historyResponse())));
+  }),
+  rest.delete("*/api/user/reservations/:reservationId", (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    const id = Number(req.params.reservationId);
+    state.reservations = state.reservations.filter((item) => item.id !== id);
+    return res(ctx.json(ok(null)));
+  }),
+  rest.put("*/api/user/reservations/:reservationId", async (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    const item = state.reservations.find(
+      (entry) => entry.id === Number(req.params.reservationId),
+    );
+    if (!item)
+      return res(
+        ctx.status(404),
+        ctx.json(fail("DEMO_NOT_FOUND", "예약을 찾을 수 없습니다.")),
+      );
+    item.time = await req.json();
+    return res(ctx.json(ok(null)));
+  }),
+
+  rest.post("*/api/user/carwashes/:bayId/payment", async (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    const body = await req.json();
+    const duration =
+      (new Date(body.endTime) - new Date(body.startTime)) / 60000;
+    return res(ctx.json(ok({ price: Math.max(0, duration / 30) * 6000 })));
+  }),
+  rest.post("*/api/user/payment/ready", async (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    state.pendingPayment = await req.json();
+    const callback = `${window.location.origin}/paymentwaiting?pg_token=portfolio-demo-approved`;
+    return res(
+      ctx.json(
+        ok({
+          tid: "portfolio-demo-tid",
+          next_redirect_mobile_url: callback,
+          next_redirect_pc_url: callback,
+        }),
+      ),
+    );
+  }),
+  rest.post("*/api/user/payment/approve", async (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    const body = await req.json();
+    if (
+      body?.payApprovalRequestDTO?.tid !== "portfolio-demo-tid" ||
+      body?.payApprovalRequestDTO?.pg_token !== "portfolio-demo-approved" ||
+      !state.pendingPayment
+    ) {
+      return res(
+        ctx.status(400),
+        ctx.json(fail("DEMO_PAYMENT", "유효하지 않은 데모 결제입니다.")),
       );
     }
-
-    const responseBody = {
-      success: true,
-      response: {
-        current: [
-          {
-            id: 2,
-            time: {
-              start: "2023-10-14T14:28:31.054667",
-              end: "2023-10-14T15:28:31.054678",
-            },
-            carwashId: 3,
-            carwashName: "용봉세차장",
-            bayNum: 8,
-            price: 5000,
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-          },
-          {
-            id: 18,
-            time: {
-              start: "2023-10-14T15:10:41.498809",
-              end: "2023-10-14T15:40:41.498834",
-            },
-            carwashId: 2,
-            carwashName: "세차장",
-            bayNum: 9,
-            price: 4000,
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-          },
-          {
-            id: 22,
-            time: {
-              start: "2023-10-14T15:16:44.596950",
-              end: "2023-10-14T15:46:44.596962",
-            },
-            carwashId: 2,
-            carwashName: "세차장",
-            bayNum: 10,
-            price: 4000,
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-          },
-        ],
-        upcoming: [
-          {
-            id: 21,
-            time: {
-              start: "2023-10-14T20:00:00",
-              end: "2023-10-14T20:30:00",
-            },
-            carwashId: 2,
-            carwashName: "세차장",
-            bayNum: 8,
-            price: 4000,
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-          },
-        ],
-        completed: [
-          {
-            id: 9,
-
-            time: {
-              start: "2023-10-14T14:28:30.958297",
-              end: "2023-10-14T14:58:30.958325",
-            },
-            carwashId: 2,
-            carwashName: "세차장",
-            bayNum: 10,
-            price: 5000,
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-          },
-          {
-            id: 20,
-            time: {
-              start: "2023-10-14T06:00:00",
-              end: "2023-10-14T06:30:00",
-            },
-            carwashId: 2,
-            carwashName: "세차장",
-            bayNum: 10,
-            price: 4000,
-            image:
-              "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-          },
-        ],
-      },
-      error: null,
+    const carwash = demoCarwashes.find(
+      (item) =>
+        body.saveDTO.bayId >= item.id * 10 &&
+        body.saveDTO.bayId < item.id * 10 + 10,
+    );
+    const price = state.pendingPayment.requestDto.total_amount;
+    const reservation = {
+      id: state.nextReservationId++,
+      time: { start: body.saveDTO.startTime, end: body.saveDTO.endTime },
+      carwashId: carwash.id,
+      carwashName: carwash.name,
+      bayNum: body.saveDTO.bayId - carwash.id * 10,
+      price,
+      image: carwash.image ? { url: carwash.image } : null,
+      status: "upcoming",
     };
-
-    return res(ctx.status(200), ctx.json(responseBody));
-  }),
-
-  // 최근 이용내역 가져오기
-  // 유저의 최근 세차장 이용 내역을 가까운 날짜 순으로 5개 가져온다.
-  rest.get("/api/reservations/recent", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
+    state.reservations.unshift(reservation);
+    state.pendingPayment = null;
     return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          recent: [
-            {
-              carwashId: 3,
-              image:
-                "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/b214edfd-a3b7-4eb0-aaef-9dd4705ca24e",
-              date: "2023-10-04",
-              carwashName: "포세이돈워시 용봉점",
-            },
-            {
-              carwashId: 4,
-              image:
-                "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/16b2ae1e-d904-48fc-b1e2-660b38c25c3f",
-              date: "2023-10-03",
-              carwashName: "셀프세차장 썬카클리닉",
-            },
-            {
-              carwashId: 3,
-              image:
-                "https://github.com/Step3-kakao-tech-campus/Team10_FE_OWNER/assets/104883910/fdb8f53b-08eb-4b35-8b89-0394473c2d7b",
-              date: "2023-10-02",
-              carwashName: "포세이돈워시 용봉점",
-            },
-          ],
-        },
-        error: null,
-      })
-    );
-  }),
-
-  // 예약 취소
-  rest.delete("/api/reservations/:reservation_id", (req, res, ctx) => {
-    const { reservation_id } = req.params;
-    const token = req.headers.get("Authorization");
-    console.log(token);
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: null,
-        error: null,
-      })
-    );
-  }),
-
-  // 예약 수정
-  rest.put("/api/reservations/:reservation_id", (req, res, ctx) => {
-    const { reservation_id } = req.params;
-    const { startTime, endTime } = req.body;
-
-    const token = req.headers.get("Authorization");
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: null,
-        error: null,
-      })
-    );
-  }),
-
-  // 결제하기(PG)
-  rest.post("/api/payment/ready/:carwash_id", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
-    const { carwash_id } = req.params;
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          tid: "T548bdcf2b8b1abb9fa4",
-          tms_result: false,
-          next_redirect_app_url:
-            "https://online-pay.kakao.com/mockup/v1/426e68070fe67dd6af122c4f402725475badbca9ffe20b56154e5f1f4abced40/aInfo",
-          next_redirect_mobile_url:
-            "https://online-pay.kakao.com/mockup/v1/426e68070fe67dd6af122c4f402725475badbca9ffe20b56154e5f1f4abced40/mInfo",
-          next_redirect_pc_url:
-            "https://online-pay.kakao.com/mockup/v1/426e68070fe67dd6af122c4f402725475badbca9ffe20b56154e5f1f4abced40/info",
-          android_app_scheme:
-            "kakaotalk://kakaopay/pg?url=https://online-pay.kakao.com/pay/mockup/426e68070fe67dd6af122c4f402725475badbca9ffe20b56154e5f1f4abced40",
-          ios_app_scheme:
-            "kakaotalk://kakaopay/pg?url=https://online-pay.kakao.com/pay/mockup/426e68070fe67dd6af122c4f402725475badbca9ffe20b56154e5f1f4abced40",
-          created_at: "2023-11-06T19:19:59",
-        },
-        error: null,
-      })
-    );
-  }),
-
-  rest.post("/api/payment/approve/:carwash_id/:bay_id", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
-    const { carwash_id, bay_id } = req.params;
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
-          name: "포세이돈워시 용봉점",
-          bay_no: 2,
-          total_price: 30000,
-          reservation_time: "예약시간",
-        },
-        error: null,
-      })
-    );
-  }),
-
-  // 결제 완료
-  rest.get("/api/reservations/:reservation_id/payment", (req, res, ctx) => {
-    const token = req.headers.get("Authorization");
-    const { reservation_id } = req.params;
-
-    if (!token) {
-      return res(
-        ctx.status(401),
-        ctx.json({ error: "인증되지 않았습니다. (토큰 없음)" })
-      );
-    }
-
-    return res(
-      ctx.status(200),
-      ctx.json({
-        success: true,
-        response: {
+      ctx.json(
+        ok({
           reservation: {
-            reservationId: 11,
-            time: {
-              start: "2024-11-01T14:00:00",
-              end: "2024-11-01T15:00:00",
-            },
-            price: 20000,
-            bayNo: 1,
+            reservationId: reservation.id,
+            time: reservation.time,
+            price: reservation.price,
+            bayNo: reservation.bayNum,
           },
           carwash: {
-            name: "전일 카 세차장",
-            location: {
-              latitude: 35.1806726203914,
-              longitude: 126.9707,
-            },
+            name: carwash.name,
+            location: carwash.location,
             carwashImages: [],
           },
-        },
-        error: null,
-      })
+        }),
+      ),
     );
   }),
+  rest.post("*/api/user/reviews", async (req, res, ctx) => {
+    const unauthorized = requireDemoAuth(req, res, ctx);
+    if (unauthorized) return unauthorized;
+    const review = await req.json();
+    state.reviews.unshift({
+      ...review,
+      username: "데모 사용자",
+      created_at: new Date().toISOString().slice(0, 16),
+    });
+    return res(ctx.json(ok(null)));
+  }),
+
+  rest.all(/\/api\//, (req, res, ctx) =>
+    res(
+      ctx.status(501),
+      ctx.json(
+        fail(
+          "DEMO_UNHANDLED_API",
+          `Demo Mode에 등록되지 않은 API입니다: ${req.method} ${req.url.pathname}`,
+        ),
+      ),
+    ),
+  ),
 ];

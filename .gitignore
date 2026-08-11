@@ -11,7 +11,10 @@
 .env
 .env.*
 !.env.example
+!.env.demo
 dist/
+dist-demo/
+.tmp-live-*/
 dev-dist/
 coverage/
 

@@ -7,6 +7,7 @@
     "dev": "vite",
     "host": "vite --host",
     "build": "vite build",
+    "build:demo": "vite build --mode demo --outDir dist-demo",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
