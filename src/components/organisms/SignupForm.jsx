@@ -10,7 +10,7 @@ import Close from "/close.svg";
 const PATTERNS = {
   username: /^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,20}$/,
   email: /\S+@\S+\.\S+/,
-  password: /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,24}$/,
+  password: /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,20}$/,
   tel: /^[0-9]{10,11}$/,
 };
 
@@ -26,7 +26,7 @@ const MESSAGES = {
   password: {
     required: "비밀번호를 입력해주세요.",
     pattern:
-      "비밀번호는 영문, 숫자, 특수기호 조합 8자리 이상으로 입력해주세요.",
+      "비밀번호는 영문, 숫자, 특수기호 조합 8자리 이상 20자리 이하로 입력해주세요.",
   },
   passwordConfirm: {
     required: "비밀번호를 입력해주세요.",

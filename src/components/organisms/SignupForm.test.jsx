@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import SignupForm from "./SignupForm";
@@ -32,5 +32,46 @@ describe("회원가입 요청", () => {
     const formData = { username: "user", email: "user@example.com" };
     expect(mutationOptions.mutationFn(formData)).toBeInstanceOf(Promise);
     expect(signup).toHaveBeenCalledWith(formData);
+  });
+
+  const renderPasswordInput = () => {
+    const { container } = render(
+      <MemoryRouter>
+        <SignupForm />
+      </MemoryRouter>,
+    );
+    return container.querySelector('input[type="password"]');
+  };
+
+  it.each([
+    ["8자 비밀번호", "Aa1!aaaa"],
+    ["20자 비밀번호", `Aa1!${"a".repeat(16)}`],
+  ])("%s를 허용한다", async (_, password) => {
+    const passwordInput = renderPasswordInput();
+
+    fireEvent.change(passwordInput, { target: { value: password } });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(
+          "비밀번호는 영문, 숫자, 특수기호 조합 8자리 이상 20자리 이하로 입력해주세요.",
+        ),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it.each([
+    ["7자 비밀번호", "Aa1!aaa"],
+    ["21자 비밀번호", `Aa1!${"a".repeat(17)}`],
+  ])("%s를 거부한다", async (_, password) => {
+    const passwordInput = renderPasswordInput();
+
+    fireEvent.change(passwordInput, { target: { value: password } });
+
+    expect(
+      await screen.findByText(
+        "비밀번호는 영문, 숫자, 특수기호 조합 8자리 이상 20자리 이하로 입력해주세요.",
+      ),
+    ).toBeInTheDocument();
   });
 });
