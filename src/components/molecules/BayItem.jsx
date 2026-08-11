@@ -14,7 +14,7 @@ const BayItem = ({
     hour,
     isHalfHour,
     bayBookedTimeList,
-    selectedDate
+    selectedDate,
   ) => {
     const minutesToAdd = isHalfHour ? 30 : 0;
 
@@ -81,7 +81,13 @@ const BayItem = ({
   return (
     <div
       className="p-4 overflow-x-auto border rounded-xl"
-      onClick={() => onClick(bayId)}>
+      onClick={() => onClick(bayId)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onClick(bayId);
+      }}
+      role="button"
+      tabIndex={0}
+    >
       <h2 className="font-semibold">베이 {bayNo}</h2>
       {renderSlotsOrClosedMessage()}
     </div>

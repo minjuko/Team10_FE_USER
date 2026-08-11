@@ -14,24 +14,26 @@ const LoginForm = () => {
   const navigate = useNavigate();
 
   const onSubmit = (data) => {
-    dispatch(loginThunk(data))
+    return dispatch(loginThunk(data))
       .then(unwrapResult)
       .then(() => {
         navigate("/");
       })
       .catch((error) => {
-        if (error.error.code === "1001") {
-          if (error.error.message.email) {
+        if (error?.error?.code === "1001") {
+          if (error.error.message?.email) {
             setErrorMessage("유효하지 않은 이메일입니다.");
-          } else if (error.error.message.password) {
+          } else if (error.error.message?.password) {
             setErrorMessage(
-              "비밀번호는 영소문자, 숫자, 특수문자를 포함해야합니다. 공백은 포함하지 않습니다"
+              "비밀번호는 영소문자, 숫자, 특수문자를 포함해야합니다. 공백은 포함하지 않습니다",
             );
           }
-        } else if (error.error.code === "1201") {
+        } else if (error?.error?.code === "1201") {
           setErrorMessage("잘못된 비밀번호입니다.");
-        } else if (error.error.code === "1301") {
+        } else if (error?.error?.code === "1301") {
           setErrorMessage("존재하지 않는 이메일입니다.");
+        } else {
+          setErrorMessage("로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
         }
       });
   };
@@ -59,7 +61,8 @@ const LoginForm = () => {
         className="absolute left-4 top-4"
         onClick={() => {
           navigate("/");
-        }}>
+        }}
+      >
         <img src={Close} alt="닫기 버튼" />
       </Button>
       <div className="grid gap-16">
@@ -67,7 +70,8 @@ const LoginForm = () => {
         <form
           noValidate
           className="flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit)}>
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <TextInput
             type="email"
             placeholder="이메일"
@@ -108,7 +112,8 @@ const LoginForm = () => {
             type="submit"
             disabled={isSubmitting}
             variant="long"
-            className="rounded-lg">
+            className="rounded-lg"
+          >
             로그인
           </Button>
           {errorMessage && (
@@ -118,7 +123,8 @@ const LoginForm = () => {
           )}
           <Link
             to="/signup"
-            className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75">
+            className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75"
+          >
             회원가입
           </Link>
         </form>

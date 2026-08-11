@@ -12,15 +12,21 @@ const ReservationHistoryTemplate = () => {
 
   const navigate = useNavigate();
 
-  const currentReservations = data.data.response.currentReservationList;
-  const upcomingReservations = data.data.response.upcomingReservationList;
-  const completedReservations = data.data.response.completeReservationList;
+  const currentReservations =
+    data?.data?.response?.currentReservationList || [];
+  const upcomingReservations =
+    data?.data?.response?.upcomingReservationList || [];
+  const completedReservations =
+    data?.data?.response?.completeReservationList || [];
 
   return (
     <div className="grid gap-4">
       <h1 className="pt-16 text-2xl font-bold">예약내역</h1>
 
       <h2 className="text-lg font-semibold">현재 진행중인 세차</h2>
+      {currentReservations.length === 0 && (
+        <div>현재 진행 중인 세차가 없습니다.</div>
+      )}
       {currentReservations.map((reservation) => (
         <ReservationItem
           key={reservation.id}
@@ -61,7 +67,8 @@ const ReservationHistoryTemplate = () => {
           <Button
             variant="long"
             className="bg-yellow-400 rounded-md"
-            onClick={() => navigate("/reservation")}>
+            onClick={() => navigate("/reservation")}
+          >
             예약하러 가기
           </Button>
         </div>
@@ -69,6 +76,9 @@ const ReservationHistoryTemplate = () => {
 
       <hr />
       <h2 className="text-lg font-semibold">완료한 세차</h2>
+      {completedReservations.length === 0 && (
+        <div>완료된 세차 내역이 없습니다.</div>
+      )}
       {completedReservations.map((reservation) => (
         <ReservationItem
           key={reservation.id}

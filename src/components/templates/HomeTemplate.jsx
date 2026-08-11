@@ -1,4 +1,4 @@
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../atoms/Button";
 import { CarwashCard } from "../molecules/CarwashCard";
 import { RecentCarwashSlider } from "../organisms/RecentCarwashSlider";
@@ -16,6 +16,7 @@ import { resetStore } from "../../store/action";
 const HomeTemplate = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [location, setLocation] = useState({
     latitude: 35.14,
     longitude: 126.9,
@@ -37,18 +38,19 @@ const HomeTemplate = () => {
   const [recommended, recent] = useQueries({
     queries: [
       {
-        queryKey: ["recommended"],
+        queryKey: ["recommended", location.latitude, location.longitude],
         queryFn: () =>
           carwashesRecommended(location.latitude, location.longitude),
       },
       {
         queryKey: ["recent"],
         queryFn: () => reservationsRecent(),
+        enabled: isLoggedIn,
       },
     ],
   });
 
-  const recommendedData = recommended?.data?.data?.response[0];
+  const recommendedData = recommended?.data?.data?.response?.[0];
   const recentList = recent?.data?.data?.response?.recentReservationList || [];
 
   return (
@@ -60,6 +62,7 @@ const HomeTemplate = () => {
             onClick={() => {
               dispatch(logout());
               dispatch(resetStore());
+              queryClient.removeQueries({ queryKey: ["recent"] });
             }}
           >
             로그아웃
@@ -105,7 +108,11 @@ const HomeTemplate = () => {
       </section>
       <section className="grid-4">
         <h2 className="text-xl font-semibold">이런 세차장 어때요?</h2>
-        {recommendedData && (
+        {recommended.isPending ? (
+          <div role="status">추천 세차장을 불러오는 중입니다.</div>
+        ) : recommended.isError ? (
+          <div role="alert">추천 세차장을 불러오지 못했습니다.</div>
+        ) : recommendedData ? (
           <CarwashCard
             id={recommendedData.id}
             image={recommendedData.image}
@@ -115,12 +122,18 @@ const HomeTemplate = () => {
             reviewCount={recommendedData.reviewCount}
             distance={recommendedData.distance}
           />
+        ) : (
+          <div>현재 추천할 수 있는 세차장이 없습니다.</div>
         )}
       </section>
       {isLoggedIn && (
         <section className="grid-4">
           <h2 className="text-xl font-semibold">최근 이용 내역</h2>
-          {recentList.length === 0 ? (
+          {recent.isPending ? (
+            <div role="status">최근 이용 내역을 불러오는 중입니다.</div>
+          ) : recent.isError ? (
+            <div role="alert">최근 이용 내역을 불러오지 못했습니다.</div>
+          ) : recentList.length === 0 ? (
             <div className="text-center ">최근 이용 내역이 없습니다.</div>
           ) : (
             <RecentCarwashSlider recentList={recentList} />

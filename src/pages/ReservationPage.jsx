@@ -9,7 +9,7 @@ const ReservationPage = () => {
   return (
     <GeneralErrorBoundary navigate={navigate}>
       <Suspense fallback={<Loader />}>
-        <ReservationTemplate />;
+        <ReservationTemplate />
       </Suspense>
     </GeneralErrorBoundary>
   );

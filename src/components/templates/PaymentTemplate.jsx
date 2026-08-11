@@ -31,19 +31,20 @@ const PaymentTemplate = () => {
     carwashId && bayId && reservations?.startTime && reservations?.endTime,
   );
 
-  const { mutate: paymentCalMutate } = useMutation({
-    mutationFn: (data) => calculatePayment(bayId, data),
-    onSuccess: (data) => {
-      setPaymentData({ price: data.data.response.price });
-    },
-    onError: (error) => {
-      const errorDetail = getErrorDetail(error);
-      setFailmodalContent(errorDetail);
-      setIsModalOpen(true);
-    },
-  });
+  const { mutate: paymentCalMutate, isPending: isCalculatingPrice } =
+    useMutation({
+      mutationFn: (data) => calculatePayment(bayId, data),
+      onSuccess: (data) => {
+        setPaymentData({ price: data.data.response.price });
+      },
+      onError: (error) => {
+        const errorDetail = getErrorDetail(error);
+        setFailmodalContent(errorDetail);
+        setIsModalOpen(true);
+      },
+    });
 
-  const { mutate: payMutate } = useMutation({
+  const { mutate: payMutate, isPending: isPreparingPayment } = useMutation({
     mutationFn: (data) => pgpayment(data),
     onSuccess: (data) => {
       const response = data?.data?.response;
@@ -150,6 +151,7 @@ const PaymentTemplate = () => {
     reservations.endTime,
   );
   const paymentAmount = paymentData?.price ? paymentData.price : "계산 중...";
+  const canPay = Number.isFinite(paymentData?.price);
 
   const modalContent = (
     <div className="flex flex-col gap-2">
@@ -179,10 +181,11 @@ const PaymentTemplate = () => {
       <Button
         className="fixed bottom-0 w-full p-4 text-center bg-kakao"
         onClick={handlePayment}
+        disabled={isCalculatingPrice || isPreparingPayment || !canPay}
       >
         <div className="flex items-center justify-center gap-2 text-xl font-semibold">
           <img src={KakaoPayIcon} alt="카카오페이 아이콘" className="w-14" />
-          <div>결제하기</div>
+          <div>{isPreparingPayment ? "결제 준비 중..." : "결제하기"}</div>
         </div>
       </Button>
       <CustomModal

@@ -24,8 +24,9 @@ const ImageCarousel = ({ images }) => {
         autoPlay={true}
         infiniteLoop={true}
         showThumbs={false}
-        selectedItem={images[currentIndex]}
-        onChange={handleChange}>
+        selectedItem={currentIndex}
+        onChange={handleChange}
+      >
         {renderSlides}
       </Carousel>
     </div>

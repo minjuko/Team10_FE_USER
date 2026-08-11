@@ -40,7 +40,7 @@ const PaymentWaitingTemplate = () => {
     if (!hasCallbackState) dispatch(clearPayment());
   }, [dispatch, hasCallbackState]);
 
-  const { mutate: approveMutate } = useMutation({
+  const { mutate: approveMutate, isPending: isApproving } = useMutation({
     mutationFn: (data) => pgapprove(data),
     onSuccess: (data) => {
       dispatch(resetStore());
@@ -115,8 +115,9 @@ const PaymentWaitingTemplate = () => {
         variant="long"
         className="fixed bottom-0 left-0"
         onClick={handlePayment}
+        disabled={isApproving}
       >
-        결제 완료를 위해 클릭하세요
+        {isApproving ? "결제 승인 중..." : "결제 완료를 위해 클릭하세요"}
       </Button>
       <CustomModal
         isOpen={isModalOpen}

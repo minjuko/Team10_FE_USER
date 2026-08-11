@@ -29,17 +29,19 @@ const CarwashDetailTemplate = ({ carwashId }) => {
   }`;
 
   const images =
-    detailData.imageFileList.length > 0
+    detailData.imageFileList?.length > 0
       ? detailData.imageFileList.map((image) => ({
           label: "Image",
           alt: detailData.name,
           url: image.url,
         }))
-      : {
-          label: "Image Not Found",
-          alt: "세차장 등록된 이미지가 없습니다",
-          url: "/CarwashDetail/CarwashImgNotFound.png",
-        };
+      : [
+          {
+            label: "Image Not Found",
+            alt: "세차장 등록된 이미지가 없습니다",
+            url: "/CarwashDetail/CarwashImgNotFound.png",
+          },
+        ];
 
   return (
     <div className="relative mb-16 overflow-y-auto">
@@ -72,14 +74,15 @@ const CarwashDetailTemplate = ({ carwashId }) => {
             <KeyPointInfo selectedPoints={detailData.keywordIdList} />
           </div>
         </div>
-        <Tab introduction={detailData.description} />
+        <Tab introduction={detailData.description} carwashId={carwashId} />
       </div>
       <Button
         variant="long"
         className="fixed bottom-0"
         onClick={() => {
           navigate(`/bayselection/${carwashId}`);
-        }}>
+        }}
+      >
         예약하러 가기
       </Button>
     </div>

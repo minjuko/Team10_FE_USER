@@ -23,10 +23,10 @@ const ReviewPostTemplate = () => {
   const navigate = useNavigate();
 
   const carwashId = useSelector(
-    (state) => state.reservationProcess.selectedCarwashId
+    (state) => state.reservationProcess.selectedCarwashId,
   );
   const reservationId = useSelector(
-    (state) => state.reservationProcess.selectedReservationId
+    (state) => state.reservationProcess.selectedReservationId,
   );
 
   const keywordMapping = {
@@ -44,7 +44,7 @@ const ReviewPostTemplate = () => {
       Object.keys(keywordMapping).map((id) => ({
         id: parseInt(id),
         keyword: keywordMapping[id],
-      }))
+      })),
     );
   }, []);
 
@@ -85,7 +85,7 @@ const ReviewPostTemplate = () => {
     }
     if (rate === 0 || comment.trim().length === 0) {
       setModalContent(
-        rate === 0 ? "별점을 선택해주세요." : "후기를 입력해주세요."
+        rate === 0 ? "별점을 선택해주세요." : "후기를 입력해주세요.",
       );
       setModalType("info");
       setIsModalOpen(true);
@@ -93,6 +93,7 @@ const ReviewPostTemplate = () => {
     }
     if (comment.length > 100) {
       setIsOverLimit(true);
+      return;
     }
     setIsOverLimit(false);
     const payload = {
@@ -111,7 +112,8 @@ const ReviewPostTemplate = () => {
         className="absolute left-4 top-4"
         onClick={() => {
           navigate("/history");
-        }}>
+        }}
+      >
         <img src={Close} alt="닫기 버튼" />
       </Button>
       <div className="grid gap-8">
@@ -141,8 +143,10 @@ const ReviewPostTemplate = () => {
         <Button
           variant="long"
           onClick={handleSubmit}
-          className="fixed bottom-0 left-0">
-          리뷰 등록하기
+          disabled={mutation.isPending}
+          className="fixed bottom-0 left-0"
+        >
+          {mutation.isPending ? "등록 중..." : "리뷰 등록하기"}
         </Button>
         <CustomModal
           isOpen={isModalOpen}

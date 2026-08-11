@@ -25,13 +25,6 @@ const DualBottomsheet = ({ className, children }) => {
         const closeThreshold = EXPANDED_Y + 5;
         const openThreshold = COLLAPSED_Y - 5;
 
-        console.log(
-          "my, closseThreshodl, openThreshold",
-          my,
-          closeThreshold,
-          openThreshold
-        );
-
         if (expanded == true && my > closeThreshold) {
           set({ y: COLLAPSED_Y, config: { duration: 250 } });
           setExpanded(false);
@@ -40,7 +33,6 @@ const DualBottomsheet = ({ className, children }) => {
           set({ y: EXPANDED_Y, config: { duration: 250 } });
           setExpanded(true);
         }
-        setActive(false);
       } else {
         set({ y: my, immediate: down, config: { duration: 0 } });
         setActive(down);
@@ -50,7 +42,7 @@ const DualBottomsheet = ({ className, children }) => {
       initial: () => [0, y.get()],
       bounds: { left: 0, right: 0, top: EXPANDED_Y, bottom: COLLAPSED_Y },
       rubberband: true,
-    }
+    },
   );
 
   return (

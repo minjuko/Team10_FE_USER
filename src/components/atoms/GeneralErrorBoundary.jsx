@@ -22,11 +22,9 @@ export class GeneralErrorBoundary extends React.Component {
 
       let errorPageURL = "/error";
       if (statusCode == 401) {
-        console.log(statusCode);
         errorPageURL = "/login";
       } else {
         errorPageURL = "/";
-        console.log(statusCode);
       }
 
       const errordetail = getErrorDetail(this.state.error);
@@ -47,7 +45,8 @@ export class GeneralErrorBoundary extends React.Component {
           <Button
             variant="long"
             onClick={() => this.props.navigate(errorPageURL)}
-            className="fixed bottom-0">
+            className="fixed bottom-0"
+          >
             {buttontext}
           </Button>
         </div>

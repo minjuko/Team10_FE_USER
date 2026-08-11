@@ -7,6 +7,7 @@ import { CLEAR_PAYMENT } from "../../store/action";
 
 const dispatch = vi.fn();
 const approve = vi.fn();
+const mutationState = vi.hoisted(() => ({ isPending: false }));
 
 vi.mock("react-redux", () => ({
   useDispatch: () => dispatch,
@@ -25,15 +26,17 @@ vi.mock("react-redux", () => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
-  useMutation: () => ({ mutate: approve }),
+  useMutation: () => ({ mutate: approve, isPending: mutationState.isPending }),
 }));
 
 vi.mock("../../apis/payment", () => ({ pgapprove: vi.fn() }));
+vi.mock("../atoms/CustomModal", () => ({ default: () => null }));
 
 describe("결제 callback 검증", () => {
   beforeEach(() => {
     dispatch.mockClear();
     approve.mockClear();
+    mutationState.isPending = false;
   });
 
   it("pg_token 없이 직접 접근하면 approve하지 않고 stale tid를 제거한다", async () => {
@@ -51,5 +54,17 @@ describe("결제 callback 검증", () => {
     await waitFor(() =>
       expect(dispatch).toHaveBeenCalledWith({ type: CLEAR_PAYMENT }),
     );
+  });
+
+  it("approve 요청 중에는 완료 버튼을 비활성화한다", () => {
+    mutationState.isPending = true;
+    render(
+      <MemoryRouter initialEntries={["/paymentwaiting?pg_token=token"]}>
+        <PaymentWaitingTemplate />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole("button", { name: "결제 승인 중..." }),
+    ).toBeDisabled();
   });
 });

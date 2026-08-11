@@ -27,7 +27,7 @@ const BaySelectionTemplate = ({ carwashId }) => {
 
   const detailData = carwashInfoData.data.data.response.optime;
   const name = carwashInfoData.data.data.response.name;
-  const bayListData = baysData.data.data.response.bayList;
+  const bayListData = baysData.data.data.response.bayList || [];
 
   const handleBayClick = (bayId) => {
     dispatch({ type: "SET_BAY_ID", payload: bayId });

@@ -9,7 +9,7 @@ export const HomePage = () => {
   return (
     <GeneralErrorBoundary navigate={navigate}>
       <Suspense fallback={<Loader />}>
-        <HomeTemplate location={location} />
+        <HomeTemplate />
       </Suspense>
     </GeneralErrorBoundary>
   );

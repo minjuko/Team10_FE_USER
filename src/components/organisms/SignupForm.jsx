@@ -42,11 +42,10 @@ const SignupForm = () => {
   const [emailChecked, setEmailChecked] = useState(false);
   const [emailCheckMessage, setEmailCheckMessage] = useState("");
   const [submitMessage, setSubmitMessage] = useState("");
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: (data) => {
-      signup(data);
-    },
+    mutationFn: (data) => signup(data),
   });
 
   const navigate = useNavigate();
@@ -63,6 +62,7 @@ const SignupForm = () => {
 
   const onCheckEmail = async () => {
     setEmailCheckMessage("");
+    setIsCheckingEmail(true);
     try {
       const result = await checkEmail(email);
       if (result.data.success) {
@@ -74,8 +74,10 @@ const SignupForm = () => {
     } catch (error) {
       setEmailChecked(false);
       setEmailCheckMessage(
-        "중복된 이메일이 있습니다. 다른 이메일을 입력해주세요."
+        "중복된 이메일이 있습니다. 다른 이메일을 입력해주세요.",
       );
+    } finally {
+      setIsCheckingEmail(false);
     }
   };
 
@@ -100,7 +102,7 @@ const SignupForm = () => {
       onError: (error) => {
         setSubmitMessage(
           error.response?.data?.message ||
-            "회원가입에 실패했습니다. 다시 시도해주세요."
+            "회원가입에 실패했습니다. 다시 시도해주세요.",
         );
       },
     });
@@ -112,7 +114,8 @@ const SignupForm = () => {
         className="absolute left-4 top-4"
         onClick={() => {
           navigate("/");
-        }}>
+        }}
+      >
         <img src={Close} alt="닫기 버튼" />
       </Button>
       <div className="grid gap-16">
@@ -120,7 +123,8 @@ const SignupForm = () => {
         <form
           noValidate
           className="flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit)}>
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <div className="flex flex-col gap-4">
             <TextInput
               type="text"
@@ -159,7 +163,10 @@ const SignupForm = () => {
               type="button"
               variant="small"
               onClick={onCheckEmail}
-              disabled={isSubmitting || !email || errors.email}>
+              disabled={
+                isSubmitting || isCheckingEmail || !email || errors.email
+              }
+            >
               중복체크
             </Button>
           </div>
@@ -228,24 +235,27 @@ const SignupForm = () => {
           )}
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || mutation.isPending}
             variant="long"
-            className="rounded-xl">
-            회원가입
+            className="rounded-xl"
+          >
+            {mutation.isPending ? "가입 중..." : "회원가입"}
           </Button>
           {submitMessage && (
             <small
               className={
                 submitMessage.includes("실패") ? "text-red-500" : "text-primary"
               }
-              role="alert">
+              role="alert"
+            >
               {submitMessage}
             </small>
           )}
 
           <Link
             to="/login"
-            className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75">
+            className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75"
+          >
             로그인
           </Link>
         </form>

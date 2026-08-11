@@ -27,7 +27,13 @@ const StoreItem = ({
   return (
     <div
       className="relative flex items-center gap-4 p-4 bg-white border border-gray-300 rounded-xl"
-      onClick={handleClick}>
+      onClick={handleClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") handleClick();
+      }}
+      role="button"
+      tabIndex={0}
+    >
       <div className="w-24 h-24 overflow-auto rounded-xl">
         <img
           className="object-cover w-full h-full"

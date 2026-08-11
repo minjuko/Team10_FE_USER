@@ -42,7 +42,6 @@ const ReservationItem = ({
       const errorDetail = getErrorDetail(error);
 
       setFailmodalContent(errorDetail);
-      console.log(failmodalContent);
       setIsModalOpen(true);
     },
   });
@@ -94,10 +93,11 @@ const ReservationItem = ({
       {buttontype === "cancel" && (
         <Button
           variant="long"
+          disabled={mutation.isPending}
           onClick={() => setIsModalOpen(true)}
           className="bg-red-500 rounded-md "
         >
-          예약 취소
+          {mutation.isPending ? "취소 중..." : "예약 취소"}
         </Button>
       )}
       {buttontype === "review" && (
