@@ -1,8 +1,14 @@
 import axios from "axios";
 
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
+
+if (!apiBaseURL) {
+  throw new Error("VITE_API_BASE_URL is required");
+}
+
 export const instance = axios.create({
   timeout: 5000,
-  baseURL: "https://k923062c3c512a.user-app.krampoline.com",
+  baseURL: apiBaseURL,
   headers: {
     "Content-Type": "application/json",
   },

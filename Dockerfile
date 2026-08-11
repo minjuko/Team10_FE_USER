@@ -1,6 +1,5 @@
 # Build stage
 FROM krmp-d2hub-idock.9rum.cc/goorm/node:16 AS build
-ENV VITE_KAKAOMAP_API_KEY=3130c03f68d56e65941b59d55ea82d1c
 WORKDIR /usr/src/app
 COPY /package*.json ./
 RUN npm ci

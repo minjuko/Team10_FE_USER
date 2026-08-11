@@ -9,6 +9,11 @@
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
+dist/
+dev-dist/
+coverage/
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,react,storybookjs,macos,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,react,storybookjs,macos,windows
