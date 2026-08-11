@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSpring, animated, config } from "react-spring";
 import { useDrag } from "react-use-gesture";
 
@@ -14,7 +14,7 @@ const DualBottomsheet = ({ className, children }) => {
   }));
 
   const bind = useDrag(
-    ({ movement: [x, my], down, distance, tap, first, last }) => {
+    ({ movement: [, my], down, tap, first, last }) => {
       if (tap) {
         return;
       }
@@ -35,7 +35,6 @@ const DualBottomsheet = ({ className, children }) => {
         }
       } else {
         set({ y: my, immediate: down, config: { duration: 0 } });
-        setActive(down);
       }
     },
     {

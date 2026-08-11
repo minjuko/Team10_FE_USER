@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { StarPicker } from "../atoms/StarPicker";
 import { BadgeSet } from "../molecules/BadgeSet";
@@ -10,8 +10,17 @@ import CustomModal from "../atoms/CustomModal";
 import { getErrorDetail } from "../../layouts/errorswitch";
 import Close from "/close.svg";
 
+const REVIEW_KEYWORDS = [
+  { id: 1, keyword: "사장님이 친절해요" },
+  { id: 2, keyword: "간단한 용품을 팔아요" },
+  { id: 3, keyword: "휴게공간이 있어요" },
+  { id: 4, keyword: "가격이 합리적이에요" },
+  { id: 5, keyword: "타이어 공기를 넣을 수 있어요" },
+  { id: 6, keyword: "매장이 깨끗해요" },
+  { id: 7, keyword: "여름엔 시원하고 겨울엔 따뜻해요" },
+];
+
 const ReviewPostTemplate = () => {
-  const [keywords, setKeywords] = useState([]);
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [rate, setRate] = useState(0);
   const [comment, setComment] = useState("");
@@ -28,25 +37,6 @@ const ReviewPostTemplate = () => {
   const reservationId = useSelector(
     (state) => state.reservationProcess.selectedReservationId,
   );
-
-  const keywordMapping = {
-    1: "사장님이 친절해요",
-    2: "간단한 용품을 팔아요",
-    3: "휴게공간이 있어요",
-    4: "가격이 합리적이에요",
-    5: "타이어 공기를 넣을 수 있어요",
-    6: "매장이 깨끗해요",
-    7: "여름엔 시원하고 겨울엔 따뜻해요",
-  };
-
-  useEffect(() => {
-    setKeywords(
-      Object.keys(keywordMapping).map((id) => ({
-        id: parseInt(id),
-        keyword: keywordMapping[id],
-      })),
-    );
-  }, []);
 
   const mutation = useMutation({
     mutationFn: (data) => {
@@ -121,7 +111,10 @@ const ReviewPostTemplate = () => {
           예약한 세차장이 어땠나요?
         </h1>
         <StarPicker onRate={setRate} />
-        <BadgeSet keywords={keywords} onSelectKeyword={setSelectedKeywords} />
+        <BadgeSet
+          keywords={REVIEW_KEYWORDS}
+          onSelectKeyword={setSelectedKeywords}
+        />
         <textarea
           className={`p-4 pb-40 bg-gray-100 border border-gray-300 rounded-lg resize-none ${
             isOverLimit ? "border-red-500" : ""

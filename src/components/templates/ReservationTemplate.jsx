@@ -169,9 +169,9 @@ const ReservationTemplate = () => {
             {...bindScroll()}
           >
             {filteredCarwashList?.length > 0 ? (
-              filteredCarwashList.map((item, index) => (
+              filteredCarwashList.map((item) => (
                 <StoreItem
-                  key={index}
+                  key={item.id}
                   carwashId={item.id}
                   imgsrc={item.image}
                   storename={item.name}

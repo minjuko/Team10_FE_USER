@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 const MapWithPin = ({ lat, lng, text, className }) => {
   useEffect(() => {
+    let isCancelled = false;
     const script = document.createElement("script");
     script.async = true;
     script.src =
@@ -11,8 +12,13 @@ const MapWithPin = ({ lat, lng, text, className }) => {
     document.head.appendChild(script);
 
     script.onload = () => {
+      if (isCancelled || !window.kakao) return;
+      const kakao = window.kakao;
+
       kakao.maps.load(() => {
+        if (isCancelled) return;
         const container = document.getElementById("map");
+        if (!container) return;
         const options = {
           center: new kakao.maps.LatLng(lat, lng),
           level: 3,
@@ -46,13 +52,18 @@ const MapWithPin = ({ lat, lng, text, className }) => {
           </div>
         `;
 
-        const customOverlay = new kakao.maps.CustomOverlay({
+        new kakao.maps.CustomOverlay({
           map: map,
           position: position,
           content: iwContent,
           yAnchor: 1,
         });
       });
+    };
+
+    return () => {
+      isCancelled = true;
+      script.remove();
     };
   }, [lat, lng, text]);
 

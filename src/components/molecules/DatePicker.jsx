@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const DatePicker = ({ handleButtonClick }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -27,13 +27,12 @@ const DatePicker = ({ handleButtonClick }) => {
     <div className="p-4 rounded-lg bg-gray-50">
       <div className="flex justify-between">
         {weekDates.map((date) => (
-          <div
+          <button
+            type="button"
             key={date.toDateString()}
             className="grid w-10 gap-2 text-center"
-            onClick={() => {
-              setSelectedDate(date);
-              handleClick(date);
-            }}
+            aria-pressed={selectedDate.toDateString() === date.toDateString()}
+            onClick={() => handleClick(date)}
           >
             {isWeekend(date) ? (
               date.getDay() === 0 ? (
@@ -56,7 +55,7 @@ const DatePicker = ({ handleButtonClick }) => {
             >
               {date.getDate()}
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

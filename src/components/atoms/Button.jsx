@@ -1,6 +1,10 @@
-import React from "react";
-
-export const Button = ({ variant, className, children, ...props }) => {
+export const Button = ({
+  variant,
+  className,
+  children,
+  type = "button",
+  ...props
+}) => {
   const styles = {
     long: "block w-full h-14 p-4 bg-primary text-white font-semibold active:brightness-75",
     small: "block w-28 h-14 bg-sky-100 text-sky-500 font-semibold rounded-xl",
@@ -10,7 +14,11 @@ export const Button = ({ variant, className, children, ...props }) => {
   };
 
   return (
-    <button className={`${styles[variant]} ${className}`} {...props}>
+    <button
+      type={type}
+      className={`${styles[variant]} ${className}`}
+      {...props}
+    >
       {children}
     </button>
   );

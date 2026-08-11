@@ -6,6 +6,7 @@ const KakaoMap = ({
   mapdata = [],
 }) => {
   useEffect(() => {
+    let isCancelled = false;
     const script = document.createElement("script");
     script.async = true;
     script.src =
@@ -15,14 +16,17 @@ const KakaoMap = ({
     document.head.appendChild(script);
 
     script.onload = () => {
+      if (isCancelled || !window.kakao) return;
       const kakao = window.kakao;
 
       kakao.maps.load(() => {
+        if (isCancelled) return;
         const container = document.getElementById("map");
+        if (!container) return;
         const options = {
           center: new kakao.maps.LatLng(
             currentloc.latitude - 0.03,
-            currentloc.longitude
+            currentloc.longitude,
           ),
           level: 7,
         };
@@ -32,13 +36,13 @@ const KakaoMap = ({
         const markerImage = new kakao.maps.MarkerImage(
           "/myloca.png",
           new kakao.maps.Size(20, 30),
-          { offset: new kakao.maps.Point(10, 25) }
+          { offset: new kakao.maps.Point(10, 25) },
         );
 
         const marker = new kakao.maps.Marker({
           position: new kakao.maps.LatLng(
             currentloc.latitude,
-            currentloc.longitude
+            currentloc.longitude,
           ),
           image: markerImage,
         });
@@ -48,7 +52,7 @@ const KakaoMap = ({
         mapdata.forEach((el) => {
           const position = new kakao.maps.LatLng(
             el.location.latitude,
-            el.location.longitude
+            el.location.longitude,
           );
           const iwContent = `
 <div style="
@@ -91,7 +95,8 @@ const KakaoMap = ({
     };
 
     return () => {
-      document.head.removeChild(script);
+      isCancelled = true;
+      script.remove();
     };
   }, [currentloc, mapdata]);
 

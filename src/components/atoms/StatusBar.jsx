@@ -6,7 +6,9 @@ const StatusBar = () => {
 
   return (
     <nav className="fixed top-0 z-50 w-full p-4 h-14">
-      <img src={BackImg} alt="뒤로가기" onClick={() => navigate(-1)} />
+      <button type="button" onClick={() => navigate(-1)} aria-label="뒤로가기">
+        <img src={BackImg} alt="" />
+      </button>
     </nav>
   );
 };

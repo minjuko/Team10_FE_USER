@@ -1,6 +1,11 @@
-import React from "react";
-import dayjs from "dayjs";
 import TimeSlot from "../atoms/TimeSlot";
+import {
+  filterPastSlots,
+  generateTimeSlots,
+  getOpeningPeriodForDate,
+  isReservationOverlapping,
+  normalizeOpeningHours,
+} from "../../utils/reservationTime";
 
 const BayItem = ({
   bayId,
@@ -10,45 +15,28 @@ const BayItem = ({
   selectedDate,
   onClick,
 }) => {
-  const timeIsReserved = (
-    hour,
-    isHalfHour,
-    bayBookedTimeList,
+  const openingPeriod = getOpeningPeriodForDate(
+    normalizeOpeningHours(openingHours),
     selectedDate,
-  ) => {
-    const minutesToAdd = isHalfHour ? 30 : 0;
+  );
+  const availableSlots = new Set(
+    filterPastSlots(generateTimeSlots(openingPeriod), selectedDate),
+  );
+  const startHour = Math.floor(openingPeriod.startMinutes / 60);
+  const endHour = Math.ceil(openingPeriod.endMinutes / 60);
+  const isBusinessClosed = availableSlots.size === 0;
 
-    const startTimeToCheck = dayjs(selectedDate)
-      .hour(hour)
-      .minute(minutesToAdd);
+  const timeIsUnavailable = (hour, isHalfHour) => {
+    const minute = hour * 60 + (isHalfHour ? 30 : 0);
+    const time = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(
+      minute % 60,
+    ).padStart(2, "0")}`;
 
-    return bayBookedTimeList.some((timeSlot) => {
-      const startTime = dayjs(timeSlot.startTime);
-      const endTime = dayjs(timeSlot.endTime);
-
-      return (
-        startTimeToCheck.isSame(startTime) ||
-        (startTimeToCheck.isBefore(endTime) &&
-          startTimeToCheck.isAfter(startTime))
-      );
-    });
+    return (
+      !availableSlots.has(time) ||
+      isReservationOverlapping(selectedDate, time, 30, bayBookedTimeList || [])
+    );
   };
-
-  const isWeekend =
-    dayjs(selectedDate).day() === 0 || dayjs(selectedDate).day() === 6;
-  const openingHoursForToday = isWeekend
-    ? openingHours.weekend
-    : openingHours.weekday;
-
-  const now = dayjs();
-  const closingTimeToday =
-    openingHoursForToday.end != "00:00"
-      ? dayjs()
-          .set("hour", parseInt(openingHoursForToday.end.split(":")[0]))
-          .set("minute", parseInt(openingHoursForToday.end.split(":")[1]))
-      : dayjs().set("hour", parseInt("23")).set("minute", parseInt("59"));
-
-  const isBusinessClosed = now.isAfter(closingTimeToday);
 
   const renderSlotsOrClosedMessage = () => {
     if (isBusinessClosed) {
@@ -64,15 +52,9 @@ const BayItem = ({
     } else {
       return (
         <TimeSlot
-          startHour={now.hour()}
-          endHour={
-            closingTimeToday.minute() == 0
-              ? closingTimeToday.hour()
-              : closingTimeToday.hour() + 1
-          }
-          isReservedCallback={(hour, isHalfHour) =>
-            timeIsReserved(hour, isHalfHour, bayBookedTimeList, selectedDate)
-          }
+          startHour={startHour}
+          endHour={endHour}
+          isReservedCallback={timeIsUnavailable}
         />
       );
     }

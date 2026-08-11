@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Home from "/GNB/home.svg";
 import HomeActive from "/GNB/homeActive.svg";
 import Reservation from "/GNB/reservation.svg";
@@ -8,11 +8,8 @@ import ReservationListActive from "/GNB/reservationListActive.svg";
 import { Link, useLocation } from "react-router-dom";
 
 export const GNB = () => {
-  const [currentPage, setCurrentPage] = useState("/");
   const location = useLocation();
-  useEffect(() => {
-    setCurrentPage(location.pathname);
-  }, [location]);
+  const currentPage = location.pathname;
 
   const mobileType = navigator.userAgent.toLowerCase();
   const paddingByType = mobileType.indexOf("iphone") > -1 ? "mb-8" : "mb-2";
@@ -36,9 +33,9 @@ export const GNB = () => {
   return (
     <nav className="fixed bottom-0 z-50 w-full px-8 bg-gray-100 border border-t-gray-200">
       <div className={`wrapper flex justify-between mt-2 ${paddingByType}`}>
-        {menus.map((menu, index) => {
+        {menus.map((menu) => {
           return (
-            <Link className="w-12" key={index} to={menu.path}>
+            <Link className="w-12" key={menu.path} to={menu.path}>
               <div className="text-center">
                 <img
                   className="inline"
@@ -50,7 +47,8 @@ export const GNB = () => {
                     currentPage === menu.path
                       ? "text-sky-500 text-xs"
                       : "text-xs"
-                  }>
+                  }
+                >
                   {menu.name}
                 </div>
               </div>

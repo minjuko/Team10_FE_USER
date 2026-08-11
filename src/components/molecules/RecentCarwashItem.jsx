@@ -18,7 +18,15 @@ export const RecentCarwashItem = ({
   };
 
   return (
-    <div className="w-24" onClick={handleItemClick}>
+    <div
+      className="w-24"
+      onClick={handleItemClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") handleItemClick();
+      }}
+      role="button"
+      tabIndex={0}
+    >
       <div className="relative w-24 h-24 overflow-hidden rounded-xl bg-slate-600">
         {image ? (
           <img
