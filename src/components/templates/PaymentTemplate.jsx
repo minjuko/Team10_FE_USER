@@ -11,21 +11,25 @@ import { useDispatch } from "react-redux";
 import { isMobile } from "react-device-detect";
 import KakaoPayIcon from "/kakaopay.png";
 import { getErrorDetail } from "../../layouts/errorswitch";
+import { clearPayment, saveTid } from "../../store/action";
 
 const PaymentTemplate = () => {
   const [paymentData, setPaymentData] = useState({ price: undefined });
   const [redirectLink, setRedirectLink] = useState(null);
   const [failmodalContent, setFailmodalContent] = useState("");
   const reservations = useSelector(
-    (state) => state.reservationProcess.reservations
+    (state) => state.reservationProcess.reservations,
   );
   const carwashId = useSelector(
-    (state) => state.reservationProcess.selectedCarwashId
+    (state) => state.reservationProcess.selectedCarwashId,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const bayId = useSelector((state) => state.reservationProcess.selectedBayId);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const hasReservation = Boolean(
+    carwashId && bayId && reservations?.startTime && reservations?.endTime,
+  );
 
   const { mutate: paymentCalMutate } = useMutation({
     mutationFn: (data) => calculatePayment(bayId, data),
@@ -42,14 +46,26 @@ const PaymentTemplate = () => {
   const { mutate: payMutate } = useMutation({
     mutationFn: (data) => pgpayment(data),
     onSuccess: (data) => {
-      console.log("data", data);
-      dispatch({ type: "SAVE_TID", payload: data?.data?.response?.tid });
+      const response = data?.data?.response;
+      const nextRedirectUrl = isMobile
+        ? response?.next_redirect_mobile_url
+        : response?.next_redirect_pc_url;
 
-      if (isMobile) {
-        setRedirectLink(data?.data?.response?.next_redirect_mobile_url);
-      } else {
-        setRedirectLink(data?.data?.response?.next_redirect_pc_url);
+      if (!response?.tid || !nextRedirectUrl) {
+        dispatch(clearPayment());
+        setFailmodalContent("결제 준비 응답이 올바르지 않습니다.");
+        setIsModalOpen(true);
+        return;
       }
+
+      dispatch(saveTid(response.tid));
+
+      setRedirectLink(nextRedirectUrl);
+    },
+    onError: (error) => {
+      dispatch(clearPayment());
+      setFailmodalContent(getErrorDetail(error));
+      setIsModalOpen(true);
     },
   });
   useEffect(() => {
@@ -64,7 +80,7 @@ const PaymentTemplate = () => {
   };
 
   const handlePayment = () => {
-    if (!bayId || !reservations.startTime || !reservations.endTime) {
+    if (!hasReservation) {
       setIsModalOpen(true);
       return;
     }
@@ -84,16 +100,30 @@ const PaymentTemplate = () => {
         endTime: reservations.endTime,
       },
     };
-    if (carwashId) {
-      payMutate(paypostData);
-    }
+    dispatch(clearPayment());
+    payMutate(paypostData);
   };
 
   useEffect(() => {
-    if (reservations && carwashId) {
+    if (hasReservation) {
       paymentCalMutate(reservations);
     }
-  }, [reservations, carwashId, paymentCalMutate]);
+  }, [hasReservation, reservations, paymentCalMutate]);
+
+  if (!hasReservation) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
+        <h1 className="text-2xl font-bold">결제할 예약 정보가 없습니다.</h1>
+        <Button
+          variant="long"
+          className="fixed bottom-0 left-0"
+          onClick={() => navigate("/reservation")}
+        >
+          예약 다시 시작
+        </Button>
+      </div>
+    );
+  }
 
   const formatDateStart = (dateString) => {
     const datePart = dayjs(dateString).format("YYYY년 MM월 DD일");
@@ -117,7 +147,7 @@ const PaymentTemplate = () => {
 
   const duration = calculateDuration(
     reservations.startTime,
-    reservations.endTime
+    reservations.endTime,
   );
   const paymentAmount = paymentData?.price ? paymentData.price : "계산 중...";
 
@@ -148,7 +178,8 @@ const PaymentTemplate = () => {
       </div>
       <Button
         className="fixed bottom-0 w-full p-4 text-center bg-kakao"
-        onClick={handlePayment}>
+        onClick={handlePayment}
+      >
         <div className="flex items-center justify-center gap-2 text-xl font-semibold">
           <img src={KakaoPayIcon} alt="카카오페이 아이콘" className="w-14" />
           <div>결제하기</div>

@@ -8,17 +8,23 @@ import { carwashesSearch } from "../../apis/carwashes";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDrag } from "react-use-gesture";
 import TextInput from "../atoms/TextInput";
+import { useDispatch } from "react-redux";
+import { resetStore } from "../../store/action";
 
 const ReservationTemplate = () => {
+  const dispatch = useDispatch();
   const initialKeypoints = [];
   const [keypoints, setKeypoints] = useState(initialKeypoints);
   const [firstClick, setFirstClick] = useState(true);
-  const [carwashList, setCarwashList] = useState([]);
   const [location, setLocation] = useState({
     latitude: 35.14,
     longitude: 126.9,
   });
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    dispatch(resetStore());
+  }, [dispatch]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -42,11 +48,7 @@ const ReservationTemplate = () => {
       carwashesSearch(keypoints, location.latitude, location.longitude),
     enabled: location.latitude !== null && location.longitude !== null,
   });
-  useEffect(() => {
-    if (data) {
-      setCarwashList(data);
-    }
-  }, [data]);
+  const carwashList = data;
 
   const handleBadgeClick = (value) => {
     if (firstClick) {
@@ -56,7 +58,7 @@ const ReservationTemplate = () => {
       setKeypoints((prevKeypoints) =>
         prevKeypoints.includes(value)
           ? prevKeypoints.filter((point) => point !== value)
-          : [...prevKeypoints, value]
+          : [...prevKeypoints, value],
       );
     }
   };
@@ -67,7 +69,7 @@ const ReservationTemplate = () => {
 
   const filteredCarwashList = searchTerm
     ? carwashList?.data?.response.filter((item) =>
-        item?.name.includes(searchTerm)
+        item?.name.includes(searchTerm),
       )
     : carwashList?.data?.response;
 
@@ -81,7 +83,7 @@ const ReservationTemplate = () => {
     {
       domTarget: scrollContainerRef,
       eventOptions: { passive: false },
-    }
+    },
   );
 
   return (
@@ -164,7 +166,8 @@ const ReservationTemplate = () => {
           <div
             className="grid gap-4 overflow-y-scroll pb-28"
             ref={scrollContainerRef}
-            {...bindScroll()}>
+            {...bindScroll()}
+          >
             {filteredCarwashList?.length > 0 ? (
               filteredCarwashList.map((item, index) => (
                 <StoreItem

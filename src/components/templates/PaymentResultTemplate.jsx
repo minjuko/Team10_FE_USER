@@ -1,9 +1,6 @@
 import { TextWithIcon } from "../atoms/TextWithIcon";
 import MapWithPin from "../atoms/MapWithPin";
 import { Button } from "../atoms/Button";
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { resetStore } from "../../store/action";
 import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -15,16 +12,39 @@ const iconsrc = {
 };
 
 const PaymentResultTemplate = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { reservationData } = location.state || {};
 
-  console.log(reservationData);
+  const reservation = reservationData?.reservation;
+  const carwash = reservationData?.carwash;
+  const hasResult =
+    reservation?.time?.start &&
+    reservation?.time?.end &&
+    typeof reservation?.price === "number" &&
+    carwash?.name &&
+    Number.isFinite(carwash?.location?.latitude) &&
+    Number.isFinite(carwash?.location?.longitude);
 
-  useEffect(() => {
-    dispatch(resetStore());
-  }, [dispatch]);
+  if (!hasResult) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
+        <h1 className="text-2xl font-bold">
+          결제 완료 정보를 확인할 수 없습니다.
+        </h1>
+        <p className="mt-4 text-gray-600">
+          결제 결과 페이지를 새로고침했거나 잘못된 경로로 접근했습니다.
+        </p>
+        <Button
+          variant="long"
+          className="fixed bottom-0 left-0"
+          onClick={() => navigate("/history")}
+        >
+          예약 내역 확인
+        </Button>
+      </div>
+    );
+  }
 
   const {
     reservation: {
@@ -70,7 +90,8 @@ const PaymentResultTemplate = () => {
       <Button
         variant="long"
         className="fixed bottom-0 left-0"
-        onClick={() => navigate("/")}>
+        onClick={() => navigate("/")}
+      >
         홈으로
       </Button>
     </div>

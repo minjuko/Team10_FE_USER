@@ -4,6 +4,7 @@ export const SET_RESERVATION_ID = "SET_RESERVATION_ID";
 export const SAVE_RESERVATION = "SAVE_RESERVATION";
 export const RESET_STORE = "RESET_STORE";
 export const SAVE_TID = "SAVE_TID";
+export const CLEAR_PAYMENT = "CLEAR_PAYMENT";
 
 export const setCarwashId = (carwashId) => ({
   type: SET_CARWASH_ID,
@@ -32,4 +33,8 @@ export const resetStore = () => ({
 export const saveTid = (Tid) => ({
   type: SAVE_TID,
   payload: Tid,
+});
+
+export const clearPayment = () => ({
+  type: CLEAR_PAYMENT,
 });

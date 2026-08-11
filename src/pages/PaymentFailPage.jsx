@@ -1,9 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "../components/atoms/Button";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { clearPayment } from "../store/action";
 
 const PaymentFailPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(clearPayment());
+  }, [dispatch]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen px-4">

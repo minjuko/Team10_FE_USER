@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../atoms/Button";
 import Image from "../atoms/Image";
 import CustomModal from "../atoms/CustomModal";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cancelReservation } from "../../apis/reservations";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ const ReservationItem = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [failmodalContent, setFailmodalContent] = useState("");
 
@@ -35,7 +36,7 @@ const ReservationItem = ({
   const mutation = useMutation({
     mutationFn: (rsvid) => cancelReservation(rsvid),
     onSuccess: () => {
-      location.reload();
+      queryClient.invalidateQueries({ queryKey: ["getHistory"] });
     },
     onError: (error) => {
       const errorDetail = getErrorDetail(error);

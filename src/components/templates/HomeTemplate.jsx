@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import Logo from "/bdbd_icon.svg";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/authSlice";
+import { resetStore } from "../../store/action";
 
 const HomeTemplate = () => {
   const navigate = useNavigate();
@@ -58,14 +59,17 @@ const HomeTemplate = () => {
           <Button
             onClick={() => {
               dispatch(logout());
-            }}>
+              dispatch(resetStore());
+            }}
+          >
             로그아웃
           </Button>
         ) : (
           <Button
             onClick={() => {
               navigate("/login");
-            }}>
+            }}
+          >
             로그인
           </Button>
         )}
@@ -78,7 +82,8 @@ const HomeTemplate = () => {
       <section className="gap-4 flex-between">
         <Link
           to="/reservation"
-          className="relative flex items-start w-full h-20 p-4 overflow-hidden text-left bg-white shadow-xl break-keep rounded-xl">
+          className="relative flex items-start w-full h-20 p-4 overflow-hidden text-left bg-white shadow-xl break-keep rounded-xl"
+        >
           내 주변 세차장 에약하기
           <img
             className="absolute right-2 -bottom-4"
@@ -88,7 +93,8 @@ const HomeTemplate = () => {
         </Link>
         <Link
           to="/history"
-          className="relative flex items-start w-full h-20 p-4 overflow-hidden text-left bg-white shadow-xl break-keep rounded-xl">
+          className="relative flex items-start w-full h-20 p-4 overflow-hidden text-left bg-white shadow-xl break-keep rounded-xl"
+        >
           예약내역 보기
           <img
             className="absolute right-2 -bottom-4"
