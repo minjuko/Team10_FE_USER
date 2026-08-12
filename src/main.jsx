@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 });
 
 const prepareDemo =
-  import.meta.env.VITE_DEMO_MODE === "true"
+  __DEMO_BUILD__ && import.meta.env.VITE_DEMO_MODE === "true"
     ? startDemoWorker(() => import("./mocks/worker"))
     : Promise.resolve();
 

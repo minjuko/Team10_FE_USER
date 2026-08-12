@@ -35,7 +35,7 @@ const ReservationHistoryTemplate = () => {
           imgsrc={
             reservation.image
               ? reservation.image.url
-              : "/CarashDetail/imagenotfound.png"
+              : "/CarwashDetail/CarwashImgNotFound.png"
           }
           reservedTime={reservation.time}
           bayname={`${reservation.carwashName}: 베이${reservation.bayNum}`}
@@ -53,7 +53,7 @@ const ReservationHistoryTemplate = () => {
             imgsrc={
               reservation.image
                 ? reservation.image.url
-                : "/CarashDetail/imagenotfound.png"
+                : "/CarwashDetail/CarwashImgNotFound.png"
             }
             reservedTime={reservation.time}
             bayname={`${reservation.carwashName}: 베이${reservation.bayNum}`}

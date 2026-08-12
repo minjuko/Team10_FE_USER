@@ -1,7 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const MapWithPin = ({ lat, lng, text, className }) => {
+  const [isMapUnavailable, setIsMapUnavailable] = useState(
+    !import.meta.env.VITE_KAKAOMAP_API_KEY,
+  );
+
   useEffect(() => {
+    if (!import.meta.env.VITE_KAKAOMAP_API_KEY) return;
+
     let isCancelled = false;
     const script = document.createElement("script");
     script.async = true;
@@ -12,7 +18,11 @@ const MapWithPin = ({ lat, lng, text, className }) => {
     document.head.appendChild(script);
 
     script.onload = () => {
-      if (isCancelled || !window.kakao) return;
+      if (isCancelled) return;
+      if (!window.kakao) {
+        setIsMapUnavailable(true);
+        return;
+      }
       const kakao = window.kakao;
 
       kakao.maps.load(() => {
@@ -60,12 +70,26 @@ const MapWithPin = ({ lat, lng, text, className }) => {
         });
       });
     };
+    script.onerror = () => {
+      if (!isCancelled) setIsMapUnavailable(true);
+    };
 
     return () => {
       isCancelled = true;
       script.remove();
     };
   }, [lat, lng, text]);
+
+  if (isMapUnavailable) {
+    return (
+      <div
+        className={`flex items-center justify-center h-72 text-sm text-gray-600 bg-gray-100 rounded-3xl ${className}`}
+        role="status"
+      >
+        지도 정보를 불러올 수 없습니다.
+      </div>
+    );
+  }
 
   return <div id="map" className={`h-72 rounded-3xl ${className}`}></div>;
 };

@@ -1,11 +1,17 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 const KakaoMap = ({
   currentloc = { latitude: 33.450701, longitude: 126.570667 },
   className,
   mapdata = [],
 }) => {
+  const [isMapUnavailable, setIsMapUnavailable] = useState(
+    !import.meta.env.VITE_KAKAOMAP_API_KEY,
+  );
+
   useEffect(() => {
+    if (!import.meta.env.VITE_KAKAOMAP_API_KEY) return;
+
     let isCancelled = false;
     const script = document.createElement("script");
     script.async = true;
@@ -16,7 +22,11 @@ const KakaoMap = ({
     document.head.appendChild(script);
 
     script.onload = () => {
-      if (isCancelled || !window.kakao) return;
+      if (isCancelled) return;
+      if (!window.kakao) {
+        setIsMapUnavailable(true);
+        return;
+      }
       const kakao = window.kakao;
 
       kakao.maps.load(() => {
@@ -93,12 +103,26 @@ const KakaoMap = ({
         });
       });
     };
+    script.onerror = () => {
+      if (!isCancelled) setIsMapUnavailable(true);
+    };
 
     return () => {
       isCancelled = true;
       script.remove();
     };
   }, [currentloc, mapdata]);
+
+  if (isMapUnavailable) {
+    return (
+      <div
+        className={`flex items-center justify-center bg-gray-100 text-sm text-gray-600 ${className}`}
+        role="status"
+      >
+        지도 정보를 불러올 수 없습니다.
+      </div>
+    );
+  }
 
   return <div id="map" className={`${className}`}></div>;
 };

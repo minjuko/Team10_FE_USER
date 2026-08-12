@@ -46,6 +46,13 @@ describe("Portfolio Demo 사용자 흐름", () => {
     const bays = await carwashesBays(101);
 
     expect(recommended.data.response[0].id).toBe(101);
+    expect(recommended.data.response[0].image).toEqual({
+      url: "/carouselimage1.jpg",
+    });
+    expect(detail.data.response.imageFileList).toEqual([
+      { url: "/carouselimage1.jpg" },
+    ]);
+    expect(detail.data.response.keywordIdList).toEqual([8, 10, 11]);
     expect(detail.data.response.optime.weekday).toEqual({
       start: "09:30",
       end: "18:30",

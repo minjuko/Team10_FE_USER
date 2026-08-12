@@ -5,13 +5,17 @@ import { VitePWA } from "vite-plugin-pwa";
 
 dotenv.config();
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  define: {
+    __DEMO_BUILD__: JSON.stringify(mode === "demo"),
+  },
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.js",
   },
   plugins: [
     VitePWA({
+      disable: mode === "demo",
       includeAssets: ["/favicon.ico", "/apple-touch-icon.png"],
       registerType: "autoUpdate",
       injectRegister: "auto",
@@ -42,4 +46,4 @@ export default defineConfig({
     }),
     react(),
   ],
-});
+}));

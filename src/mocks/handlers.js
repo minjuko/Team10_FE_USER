@@ -141,7 +141,7 @@ export const handlers = [
             .map((item) => ({
               carwashId: item.carwashId,
               carwashName: item.carwashName,
-              image: item.image?.url,
+              image: item.image,
               date: item.time.start.slice(0, 10),
             })),
         }),
@@ -224,7 +224,7 @@ export const handlers = [
       carwashName: carwash.name,
       bayNum: body.saveDTO.bayId - carwash.id * 10,
       price,
-      image: carwash.image ? { url: carwash.image } : null,
+      image: carwash.image,
       status: "upcoming",
     };
     state.reservations.unshift(reservation);
