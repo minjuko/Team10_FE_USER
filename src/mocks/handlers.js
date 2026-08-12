@@ -15,8 +15,21 @@ const fail = (code, message) => ({
 
 let state = createDemoState();
 
+const applicationApiOrigin = new URL(
+  import.meta.env.VITE_API_BASE_URL,
+  window.location.origin,
+).origin;
+
 export const resetDemoState = () => {
   state = createDemoState();
+};
+
+export const isApplicationApiRequest = (
+  requestUrl,
+  applicationOrigin = applicationApiOrigin,
+) => {
+  const url = new URL(requestUrl, applicationOrigin);
+  return url.origin === applicationOrigin && url.pathname.startsWith("/api/");
 };
 
 const requireDemoAuth = (req, res, ctx) => {
@@ -259,8 +272,10 @@ export const handlers = [
     return res(ctx.json(ok(null)));
   }),
 
-  rest.all(/\/api\//, (req, res, ctx) =>
-    res(
+  rest.all("*", (req, res, ctx) => {
+    if (!isApplicationApiRequest(req.url.href)) return req.passthrough();
+
+    return res(
       ctx.status(501),
       ctx.json(
         fail(
@@ -268,6 +283,6 @@ export const handlers = [
           `Demo Mode에 등록되지 않은 API입니다: ${req.method} ${req.url.pathname}`,
         ),
       ),
-    ),
-  ),
+    );
+  }),
 ];

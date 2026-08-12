@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import PropTypes from "prop-types";
+import { createMapLabel, loadKakaoMapsSdk } from "../../utils/kakaoMaps";
 
 const KakaoMap = ({
   currentloc = { latitude: 33.450701, longitude: 126.570667 },
   className,
   mapdata = [],
 }) => {
+  const mapContainerRef = useRef(null);
   const [isMapUnavailable, setIsMapUnavailable] = useState(
     !import.meta.env.VITE_KAKAOMAP_API_KEY,
   );
@@ -13,25 +16,11 @@ const KakaoMap = ({
     if (!import.meta.env.VITE_KAKAOMAP_API_KEY) return;
 
     let isCancelled = false;
-    const script = document.createElement("script");
-    script.async = true;
-    script.src =
-      "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" +
-      import.meta.env.VITE_KAKAOMAP_API_KEY +
-      "&autoload=false";
-    document.head.appendChild(script);
 
-    script.onload = () => {
-      if (isCancelled) return;
-      if (!window.kakao) {
-        setIsMapUnavailable(true);
-        return;
-      }
-      const kakao = window.kakao;
-
-      kakao.maps.load(() => {
+    loadKakaoMapsSdk(import.meta.env.VITE_KAKAOMAP_API_KEY)
+      .then((kakao) => {
         if (isCancelled) return;
-        const container = document.getElementById("map");
+        const container = mapContainerRef.current;
         if (!container) return;
         const options = {
           center: new kakao.maps.LatLng(
@@ -39,6 +28,7 @@ const KakaoMap = ({
             currentloc.longitude,
           ),
           level: 7,
+          mapTypeId: kakao.maps.MapTypeId.ROADMAP,
         };
 
         const map = new kakao.maps.Map(container, options);
@@ -64,52 +54,24 @@ const KakaoMap = ({
             el.location.latitude,
             el.location.longitude,
           );
-          const iwContent = `
-<div style="
-  position: relative;
-  bottom: -16px;
-  display: inline-block;
-  padding: 5px 10px;
-  background: #0098FF;
-  border: 2px solid #D6E7F1; 
-  border-radius: 8px;
-  font-size: 12px;
-  color: #FFFFFF;
-  text-align: center;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5); 
-  z-index: 1; 
-">
-  ${el?.name}
-  <div style="
-    position: absolute;
-    left: 50%;
-    bottom: -8px;
-    margin-left: -8px;
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 10px solid #0098FF;
-  "></div>
-</div>
-`;
-
           new kakao.maps.CustomOverlay({
             map: map,
             position: position,
-            content: iwContent,
+            content: createMapLabel(el?.name),
             yAnchor: 1,
           });
         });
+        kakao.maps.event.addListener(map, "tilesloaded", () => {
+          if (!isCancelled) setIsMapUnavailable(false);
+        });
+        map.relayout();
+      })
+      .catch(() => {
+        if (!isCancelled) setIsMapUnavailable(true);
       });
-    };
-    script.onerror = () => {
-      if (!isCancelled) setIsMapUnavailable(true);
-    };
 
     return () => {
       isCancelled = true;
-      script.remove();
     };
   }, [currentloc, mapdata]);
 
@@ -124,7 +86,24 @@ const KakaoMap = ({
     );
   }
 
-  return <div id="map" className={`${className}`}></div>;
+  return <div ref={mapContainerRef} className={`${className}`}></div>;
+};
+
+KakaoMap.propTypes = {
+  currentloc: PropTypes.shape({
+    latitude: PropTypes.number.isRequired,
+    longitude: PropTypes.number.isRequired,
+  }),
+  className: PropTypes.string,
+  mapdata: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      location: PropTypes.shape({
+        latitude: PropTypes.number.isRequired,
+        longitude: PropTypes.number.isRequired,
+      }).isRequired,
+    }),
+  ),
 };
 
 export default KakaoMap;

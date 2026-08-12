@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { setupServer } from "msw/node";
 import { rest } from "msw";
-import { handlers, resetDemoState } from "./handlers";
+import { handlers, isApplicationApiRequest, resetDemoState } from "./handlers";
 import { DEMO_CREDENTIALS } from "./demoData";
 import { login } from "../apis/user";
 import {
@@ -147,5 +147,31 @@ describe("Portfolio Demo 사용자 흐름", () => {
 
     await fetch("http://localhost/demo-image.png");
     expect(reachedAssetHandler).toBe(true);
+  });
+
+  it("registered application API remains handled by its demo handler", async () => {
+    const response = await instance.get("/api/open/carwashes/recommended");
+
+    expect(response.status).toBe(200);
+    expect(response.data.response[0].id).toBe(101);
+  });
+
+  it.each([
+    [
+      "Kakao map tile",
+      "http://mts.daumcdn.net/api/v1/tile/PNG02/v22_yidbg/latest/7/60/55.png",
+    ],
+    ["external CDN asset", "https://cdn.example.com/images/carwash.png"],
+  ])("does not classify a %s request as an application API", (_, url) => {
+    expect(isApplicationApiRequest(url, "http://localhost")).toBe(false);
+  });
+
+  it("classifies same-origin /api/* requests as application APIs", () => {
+    expect(
+      isApplicationApiRequest(
+        "http://localhost/api/not-registered",
+        "http://localhost",
+      ),
+    ).toBe(true);
   });
 });
