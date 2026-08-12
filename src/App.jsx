@@ -31,7 +31,7 @@ Modal.setAppElement("#root");
 function App() {
   return (
     <BrowserRouter>
-      <DemoNotice />
+      {__DEMO_BUILD__ && <DemoNotice />}
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route element={<MainLayout />}>

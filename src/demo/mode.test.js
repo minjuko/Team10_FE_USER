@@ -5,6 +5,25 @@ afterEach(() => {
   vi.resetModules();
 });
 
+describe("Screenshot Mode boundary", () => {
+  it.each([
+    ["Demo", "true", "false", true, false, true],
+    ["Screenshot", "true", "true", true, true, false],
+    ["Live", "false", "true", false, false, false],
+  ])(
+    "%s mode keeps the expected Demo UI boundary",
+    async (_, demoMode, screenshotMode, expectedDemo, expectedScreenshot, expectedUi) => {
+      const { resolveDemoMode } = await import("./mode");
+
+      expect(resolveDemoMode({ demoMode, screenshotMode })).toEqual({
+        isDemoMode: expectedDemo,
+        isScreenshotMode: expectedScreenshot,
+        showDemoUi: expectedUi,
+      });
+    },
+  );
+});
+
 describe("Demo Mode 경계", () => {
   it("Demo mode에서는 MSW worker를 활성화한다", async () => {
     const start = vi.fn().mockResolvedValue(undefined);

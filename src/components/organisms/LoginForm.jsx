@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux";
 import { loginThunk } from "../../store/authSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import Close from "/close.svg";
-import { isDemoMode } from "../../demo/mode";
+import { isDemoMode, showDemoUi } from "../../demo/mode";
 import { DEMO_CREDENTIALS } from "../../mocks/demoData";
 
 const LoginForm = () => {
@@ -119,7 +119,7 @@ const LoginForm = () => {
           >
             로그인
           </Button>
-          {isDemoMode && (
+          {__DEMO_BUILD__ && showDemoUi && (
             <div className="grid gap-2 p-3 text-sm border border-yellow-300 rounded-lg bg-yellow-50">
               <div>
                 <strong>Portfolio Demo</strong>

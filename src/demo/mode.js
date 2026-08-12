@@ -1,4 +1,18 @@
-export const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
+export const resolveDemoMode = ({ demoMode, screenshotMode }) => {
+  const isDemo = demoMode === "true";
+  const isScreenshot = isDemo && screenshotMode === "true";
+
+  return {
+    isDemoMode: isDemo,
+    isScreenshotMode: isScreenshot,
+    showDemoUi: isDemo && !isScreenshot,
+  };
+};
+
+export const { isDemoMode, isScreenshotMode, showDemoUi } = resolveDemoMode({
+  demoMode: import.meta.env.VITE_DEMO_MODE,
+  screenshotMode: import.meta.env.VITE_SCREENSHOT_MODE,
+});
 
 export const startDemoWorker = async (loadWorker) => {
   const { worker } = await loadWorker();

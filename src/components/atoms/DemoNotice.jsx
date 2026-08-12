@@ -1,7 +1,7 @@
-import { isDemoMode } from "../../demo/mode";
+import { showDemoUi } from "../../demo/mode";
 
 const DemoNotice = () => {
-  if (!isDemoMode) return null;
+  if (!showDemoUi) return null;
 
   return (
     <aside
