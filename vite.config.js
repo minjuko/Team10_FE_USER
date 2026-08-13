@@ -1,6 +1,24 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
+import { copyFileSync, createReadStream } from "node:fs";
+import { resolve } from "node:path";
+
+const demoWorkerPath = resolve("src/mocks/mockServiceWorker.js");
+
+const demoServiceWorker = (enabled) => ({
+  name: "demo-service-worker",
+  apply: enabled ? undefined : () => false,
+  configureServer(server) {
+    server.middlewares.use("/mockServiceWorker.js", (_, response) => {
+      response.setHeader("Content-Type", "application/javascript");
+      createReadStream(demoWorkerPath).pipe(response);
+    });
+  },
+  writeBundle({ dir }) {
+    copyFileSync(demoWorkerPath, resolve(dir, "mockServiceWorker.js"));
+  },
+});
 
 export default defineConfig(({ mode }) => ({
   define: {
@@ -11,6 +29,7 @@ export default defineConfig(({ mode }) => ({
     setupFiles: "./src/test/setup.js",
   },
   plugins: [
+    demoServiceWorker(mode === "demo"),
     VitePWA({
       disable: mode === "demo",
       includeAssets: ["/favicon.ico", "/apple-touch-icon.png"],

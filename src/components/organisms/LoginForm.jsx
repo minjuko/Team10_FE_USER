@@ -1,5 +1,6 @@
+/* global __DEMO_BUILD__ */
 import TextInput from "../atoms/TextInput";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button } from "../atoms/Button";
 import { useEffect, useState } from "react";
@@ -7,13 +8,14 @@ import { useDispatch } from "react-redux";
 import { loginThunk } from "../../store/authSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import Close from "/close.svg";
-import { isDemoMode, showDemoUi } from "../../demo/mode";
+import { showDemoUi } from "../../demo/mode";
 import { DEMO_CREDENTIALS } from "../../mocks/demoData";
 
 const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const onSubmit = (data) => {
     return dispatch(loginThunk(data))
@@ -75,6 +77,14 @@ const LoginForm = () => {
           className="flex flex-col gap-4"
           onSubmit={handleSubmit(onSubmit)}
         >
+          {location.state?.authRequired && (
+            <div
+              className="p-3 text-sm text-center border border-yellow-300 rounded-lg bg-yellow-50"
+              role="alert"
+            >
+              로그인이 필요한 페이지입니다. 로그인 후 이용해 주세요.
+            </div>
+          )}
           <TextInput
             type="email"
             placeholder="이메일"
@@ -150,14 +160,12 @@ const LoginForm = () => {
               {errorMessage}
             </small>
           )}
-          {!isDemoMode && (
-            <Link
-              to="/signup"
-              className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75"
-            >
-              회원가입
-            </Link>
-          )}
+          <Link
+            to="/signup"
+            className="w-full p-4 font-semibold text-center text-gray-700 bg-white h-14 rounded-xl active:filter active:brightness-75"
+          >
+            회원가입
+          </Link>
         </form>
       </div>
     </div>

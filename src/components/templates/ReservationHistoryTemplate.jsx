@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { reservationsCurrentstatus } from "../../apis/reservations";
 import { Button } from "../atoms/Button";
 import { useNavigate } from "react-router-dom";
+import LogoIcon from "/bdbd_icon.svg";
 
 const ReservationHistoryTemplate = () => {
   const { data } = useSuspenseQuery({
@@ -21,7 +22,11 @@ const ReservationHistoryTemplate = () => {
 
   return (
     <div className="grid gap-4">
-      <h1 className="pt-16 text-2xl font-bold">예약내역</h1>
+      <nav className="flex items-center gap-2 h-10 bg-white">
+        <img src={LogoIcon} className="w-5 h-6" alt="뽀득뽀득 아이콘" />
+        <img src="/bdbd.svg" className="w-24 h-auto" alt="뽀득뽀득" />
+      </nav>
+      <h1 className="text-2xl font-bold">예약내역</h1>
 
       <h2 className="text-lg font-semibold">현재 진행중인 세차</h2>
       {currentReservations.length === 0 && (

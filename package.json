@@ -74,6 +74,6 @@
     "vitest": "^0.34.6"
   },
   "msw": {
-    "workerDirectory": "public"
+    "workerDirectory": "src/mocks"
   }
 }

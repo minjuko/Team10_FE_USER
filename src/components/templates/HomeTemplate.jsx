@@ -8,10 +8,10 @@ import { carwashesRecommended } from "../../apis/carwashes";
 import { reservationsRecent } from "../../apis/reservations";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Logo from "/bdbd_icon.svg";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/authSlice";
 import { resetStore } from "../../store/action";
+import LogoIcon from "/bdbd_icon.svg";
 
 const HomeTemplate = () => {
   const navigate = useNavigate();
@@ -55,39 +55,50 @@ const HomeTemplate = () => {
 
   return (
     <div className="relative grid-8">
-      <nav className="items-center bg-white flex-between">
-        <img src={Logo} alt="뽀득뽀득 로고" />
-        {isLoggedIn ? (
-          <Button
-            onClick={() => {
-              dispatch(logout());
-              dispatch(resetStore());
-              queryClient.removeQueries({ queryKey: ["recent"] });
-            }}
-          >
-            로그아웃
-          </Button>
-        ) : (
-          <Button
-            onClick={() => {
-              navigate("/login");
-            }}
-          >
-            로그인
-          </Button>
-        )}
+      <nav className="items-center h-10 bg-white flex-between">
+        <div className="flex items-center gap-2">
+          <img src={LogoIcon} className="w-5 h-6" alt="뽀득뽀득 아이콘" />
+          <img src="/bdbd.svg" className="w-24 h-auto" alt="뽀득뽀득" />
+        </div>
+        <div className="contents">
+          <img src="/bdbd.svg" className="hidden" alt="뽀득뽀득 로고" />
+          {isLoggedIn ? (
+            <Button
+              onClick={() => {
+                dispatch(logout());
+                dispatch(resetStore());
+                queryClient.removeQueries({ queryKey: ["recent"] });
+              }}
+            >
+              로그아웃
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                navigate("/login");
+              }}
+            >
+              로그인
+            </Button>
+          )}
+        </div>
       </nav>
-      <h1 className="text-2xl font-bold">
-        {userName
-          ? `${userName}님 안녕하세요!`
-          : "여유롭게 즐기는 셀프세차, 뽀득뽀득"}
+      <h1 className="text-2xl font-bold break-keep">
+        {userName ? (
+          `${userName}님 안녕하세요!`
+        ) : (
+          <>
+            여유롭게 즐기는 셀프세차,
+            <span className="block">뽀득뽀득</span>
+          </>
+        )}
       </h1>
       <section className="gap-4 flex-between">
         <Link
           to="/reservation"
-          className="relative flex items-start w-full h-20 p-4 overflow-hidden text-left bg-white shadow-xl break-keep rounded-xl"
+          className="relative flex items-start w-full h-[72px] p-4 overflow-hidden text-left bg-white border border-gray-300 shadow-xl break-keep rounded-xl"
         >
-          내 주변 세차장 에약하기
+          내 주변 세차장 예약하기
           <img
             className="absolute right-2 -bottom-4"
             src={Reservation}
@@ -96,7 +107,7 @@ const HomeTemplate = () => {
         </Link>
         <Link
           to="/history"
-          className="relative flex items-start w-full h-20 p-4 overflow-hidden text-left bg-white shadow-xl break-keep rounded-xl"
+          className="relative flex items-start w-full h-[72px] p-4 overflow-hidden text-left bg-white border border-gray-300 shadow-xl break-keep rounded-xl"
         >
           예약내역 보기
           <img

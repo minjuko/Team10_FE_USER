@@ -2,10 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import TimeImage from "/StoreInfo/Time.svg";
 import Image from "../atoms/Image";
 import CustomModal from "../atoms/CustomModal";
-import DatePicker from "../molecules/DatePicker";
 import TimePicker from "../molecules/TimePicker";
 import DurationPicker from "../molecules/DurationPicker";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../atoms/Button";
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
@@ -18,7 +17,11 @@ import {
 } from "../../utils/reservationTime";
 
 const ScheduleTemplate = ({ carwashId, bayId }) => {
-  const [date, setDate] = useState(new Date());
+  const location = useLocation();
+  const [date, setDate] = useState(() => {
+    const selectedDate = location.state?.selectedDate;
+    return selectedDate ? new Date(selectedDate) : new Date();
+  });
   const [startTime, setStartTime] = useState();
   const [duration, setDuration] = useState();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,12 +66,6 @@ const ScheduleTemplate = ({ carwashId, bayId }) => {
   const bayInfo = bayinfo?.data?.data?.response.bayList.find(
     (bay) => bay.bayId === parseInt(bayId),
   );
-
-  const handleDateChange = (date) => {
-    setDate(date);
-    setStartTime(null);
-    setDuration(null);
-  };
 
   const handleStartTimeChange = (time) => {
     setStartTime(time);
@@ -119,8 +116,6 @@ const ScheduleTemplate = ({ carwashId, bayId }) => {
             </div>
           </div>
         </section>
-
-        <DatePicker handleButtonClick={handleDateChange} />
 
         <div className="grid gap-6">
           <section className="grid gap-2">

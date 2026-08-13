@@ -10,8 +10,8 @@ const addDays = (days) => {
 };
 
 export const DEMO_CREDENTIALS = {
-  email: "demo@bdbd.app",
-  password: "demo1234!",
+  email: "test@example.com",
+  password: "test1234!",
 };
 
 export const demoCarwashes = [

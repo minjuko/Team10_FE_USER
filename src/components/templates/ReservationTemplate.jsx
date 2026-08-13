@@ -1,12 +1,11 @@
 import KakaoMap from "../atoms/KakaoMap";
 import { Bottomsheet } from "../atoms/Bottomsheet";
 import StoreItem from "../molecules/StoreItem";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "../atoms/Badge";
 import DualBottomsheet from "../atoms/DualBottomsheet";
 import { carwashesSearch } from "../../apis/carwashes";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useDrag } from "react-use-gesture";
 import TextInput from "../atoms/TextInput";
 import { useDispatch } from "react-redux";
 import { resetStore } from "../../store/action";
@@ -73,25 +72,12 @@ const ReservationTemplate = () => {
       )
     : carwashList?.data?.response;
 
-  const scrollContainerRef = useRef(null);
-
-  const bindScroll = useDrag(
-    (state) => {
-      const [, y] = state.offset;
-      state.event.stopPropagation();
-    },
-    {
-      domTarget: scrollContainerRef,
-      eventOptions: { passive: false },
-    },
-  );
-
   return (
     <div className="w-screen">
       <KakaoMap
         currentloc={location}
         mapdata={carwashList?.data?.response}
-        className="fixed left-0 z-0 w-screen h-screen"
+        className="fixed inset-0 z-0 w-screen h-screen"
       />
 
       <DualBottomsheet className="fixed left-0 z-10">
@@ -100,11 +86,11 @@ const ReservationTemplate = () => {
             type="text"
             id="search-bar"
             placeholder="검색할 세차장 이름을 입력하세요"
-            className="p-4"
+            className="p-4 border-gray-300"
             onChange={handleSearchChange}
             value={searchTerm}
           />
-          <div className="flex gap-2 pb-8 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 pb-2 overflow-x-auto scrollbar-hide">
             <Badge
               key="8"
               label="하부세차"
@@ -164,9 +150,13 @@ const ReservationTemplate = () => {
           </div>
 
           <div
-            className="grid gap-4 overflow-y-scroll pb-28"
-            ref={scrollContainerRef}
-            {...bindScroll()}
+            className="grid flex-1 min-h-0 gap-4 overflow-y-auto overscroll-contain pb-16 touch-pan-y"
+            style={{
+              height: "calc(100dvh - var(--sheet-offset) - 190px)",
+              flex: "none",
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+            onTouchStart={(event) => event.stopPropagation()}
           >
             {filteredCarwashList?.length > 0 ? (
               filteredCarwashList.map((item) => (

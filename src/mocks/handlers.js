@@ -76,7 +76,7 @@ export const handlers = [
 
   rest.get("*/api/common/member/info", (req, res, ctx) => {
     const unauthorized = requireDemoAuth(req, res, ctx);
-    return unauthorized || res(ctx.json(ok({ name: "데모 사용자" })));
+    return unauthorized || res(ctx.json(ok({ name: "test" })));
   }),
 
   rest.get("*/api/open/carwashes/recommended", (req, res, ctx) =>

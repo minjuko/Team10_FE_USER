@@ -7,10 +7,13 @@ import { useSuspenseQueries } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Warning from "/warning.svg";
+import DatePicker from "../molecules/DatePicker";
+import { useState } from "react";
 
 const BaySelectionTemplate = ({ carwashId }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [carwashInfoData, baysData] = useSuspenseQueries({
     queries: [
@@ -31,7 +34,9 @@ const BaySelectionTemplate = ({ carwashId }) => {
 
   const handleBayClick = (bayId) => {
     dispatch({ type: "SET_BAY_ID", payload: bayId });
-    navigate(`/schedule/${carwashId}/${bayId}`);
+    navigate(`/schedule/${carwashId}/${bayId}`, {
+      state: { selectedDate: selectedDate.toISOString() },
+    });
   };
 
   const renderBayContent = () => {
@@ -41,6 +46,7 @@ const BaySelectionTemplate = ({ carwashId }) => {
           <div className="font-semibold text-primary">
             원하는 베이를 클릭하여 예약을 진행해보세요
           </div>
+          <DatePicker handleButtonClick={setSelectedDate} />
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-primary" />
@@ -54,7 +60,7 @@ const BaySelectionTemplate = ({ carwashId }) => {
           <BayList
             bays={bayListData}
             openingHours={detailData}
-            selectedDate={new Date()}
+            selectedDate={selectedDate}
             onClick={handleBayClick}
           />
         </div>
