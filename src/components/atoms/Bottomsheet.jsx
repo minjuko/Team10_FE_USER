@@ -3,7 +3,8 @@ import React from "react";
 export const Bottomsheet = ({ className, children }) => {
   return (
     <div
-      className={`shadow-xl relative w-screen rounded-t-xl bg-white ${className}`}>
+      className={`relative w-screen min-h-0 overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
+    >
       {children}
     </div>
   );

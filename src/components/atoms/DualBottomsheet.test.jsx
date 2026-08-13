@@ -1,4 +1,3 @@
-import React from "react";
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import DualBottomsheet from "./DualBottomsheet";
@@ -15,7 +14,15 @@ vi.mock("react-use-gesture", () => ({
 vi.mock("react-spring", () => ({
   animated: { div: "div" },
   config: { stiff: {} },
-  useSpring: () => [{ y: { get: () => 350 } }, setSpring],
+  useSpring: () => [
+    {
+      y: {
+        get: () => 350,
+        to: (transform) => transform(350),
+      },
+    },
+    setSpring,
+  ],
 }));
 
 describe("예약 검색 bottom sheet", () => {

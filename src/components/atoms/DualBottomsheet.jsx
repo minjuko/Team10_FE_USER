@@ -45,7 +45,11 @@ const DualBottomsheet = ({ className, children }) => {
   );
 
   return (
-    <animated.div className={`h-screen ${className}`} style={{ y }} {...bind()}>
+    <animated.div
+      className={`h-screen min-h-0 overflow-hidden ${className}`}
+      style={{ y, "--sheet-offset": y.to((value) => `${value}px`) }}
+      {...bind()}
+    >
       {children}
     </animated.div>
   );
